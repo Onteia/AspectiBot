@@ -5,22 +5,18 @@ import java.time.format.DateTimeFormatter;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.MessageReaction;
-import net.dv8tion.jda.api.entities.TextChannel;
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
-import net.dv8tion.jda.api.events.message.guild.GuildMessageUpdateEvent;
-import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionAddEvent;
-import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionRemoveEmoteEvent;
-import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionRemoveEvent;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
 
 public class DiscordServerListener extends ListenerAdapter {
 
-	public void onGuildMessageReceived(GuildMessageReceivedEvent event) {
+	public void onMessageReceived(MessageReceivedEvent event) {
 		Message message = event.getMessage();
 		Member m = event.getMember();
-		TextChannel channel = event.getChannel();
+		TextChannel channel = event.getChannel().asTextChannel();
 		
 		if(channel.getGuild().getName().equalsIgnoreCase("Aspecticord")) {
 		
@@ -50,7 +46,7 @@ public class DiscordServerListener extends ListenerAdapter {
 				}
 				
 				log_message.setColor(0xf705ff);
-				channel.getGuild().getTextChannelById(AspectiBot.logChannelID).sendMessage(log_message.build()).complete();
+				channel.getGuild().getTextChannelById(AspectiBot.logChannelID).sendMessageEmbeds(log_message.build()).complete();
 				log_message.clear();
 			
 			}
@@ -58,12 +54,12 @@ public class DiscordServerListener extends ListenerAdapter {
 		}
 	}
 	
-	public void onGuildMessageUpdate(GuildMessageUpdateEvent event) {
+	public void onMessageUpdate(MessageUpdateEvent event) {
 		
 		Message message = event.getMessage();
 		
 		Member m = event.getMember();
-		TextChannel channel = event.getChannel();
+		TextChannel channel = event.getChannel().asTextChannel();
 		
 		if(channel.getGuild().getName().equalsIgnoreCase("Aspecticord")) {
 			
@@ -93,7 +89,7 @@ public class DiscordServerListener extends ListenerAdapter {
 				}
 				
 				log_message.setColor(0xf705ff);
-				channel.getGuild().getTextChannelById(AspectiBot.logChannelID).sendMessage(log_message.build()).complete();
+				channel.getGuild().getTextChannelById(AspectiBot.logChannelID).sendMessageEmbeds(log_message.build()).complete();
 				log_message.clear();
 			
 			}

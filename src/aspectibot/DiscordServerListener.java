@@ -20,7 +20,7 @@ public class DiscordServerListener extends ListenerAdapter {
 		
 		if(channel.getGuild().getName().equalsIgnoreCase("Aspecticord")) {
 		
-			if(!m.getEffectiveName().equalsIgnoreCase("AspectiBot") && !m.getEffectiveName().equalsIgnoreCase("Pingcord") && !m.getEffectiveName().equalsIgnoreCase("Pingcord") && !m.getEffectiveName().equalsIgnoreCase("YAGPDB.xyz")) {
+			if(!m.getEffectiveName().equalsIgnoreCase("AspectiBot") && !m.getEffectiveName().equalsIgnoreCase("Pingcord") && !m.getEffectiveName().equalsIgnoreCase("YAGPDB.xyz")) {
 				
 				EmbedBuilder log_message = new EmbedBuilder();
 				
@@ -63,7 +63,7 @@ public class DiscordServerListener extends ListenerAdapter {
 		
 		if(channel.getGuild().getName().equalsIgnoreCase("Aspecticord")) {
 			
-			if(!m.getEffectiveName().equalsIgnoreCase("AspectiBot")  && !m.getEffectiveName().equalsIgnoreCase("Aspecticor") && !m.getEffectiveName().equalsIgnoreCase("Pingcord") && !m.getEffectiveName().equalsIgnoreCase("Pingcord") && !m.getEffectiveName().equalsIgnoreCase("YAGPDB.xyz")) {
+			if(!m.getEffectiveName().equalsIgnoreCase("AspectiBot") && !m.getEffectiveName().equalsIgnoreCase("Pingcord") && !m.getEffectiveName().equalsIgnoreCase("Pingcord") && !m.getEffectiveName().equalsIgnoreCase("YAGPDB.xyz")) {
 				
 				EmbedBuilder log_message = new EmbedBuilder();
 				

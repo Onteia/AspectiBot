@@ -92,7 +92,7 @@ public class AspectiBot extends ListenerAdapter {
 		
 		// set up JDA
 		JDA jda = JDABuilder.createDefault(token).setChunkingFilter(ChunkingFilter.ALL)
-				.setMemberCachePolicy(MemberCachePolicy.ALL).enableIntents(GatewayIntent.GUILD_MEMBERS).build();
+				.setMemberCachePolicy(MemberCachePolicy.ALL).enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.MESSAGE_CONTENT).build();
 		jda.getPresence().setStatus(OnlineStatus.ONLINE);
 		
 		jda.addEventListener(new DiscordServerListener());
@@ -296,8 +296,8 @@ public class AspectiBot extends ListenerAdapter {
 		try {
 
 			// get the files
-			File discordToken = new File("/home/orangepi/jars/persistent/discordToken.txt");	//"C:\\Users\\ASUS\\DarkJudas\\AspectiBot\\discordToken.txt" ; "/home/orangepi/jars/persistent/discordToken.txt"
-			File twitchToken = new File("/home/orangepi/jars/persistent/twitchOAuth.txt");		//"C:\\Users\\ASUS\\DarkJudas\\AspectiBot\\twitchOAuth.txt" ; "/home/orangepi/jars/persistent/twitchOAuth.txt"
+			File discordToken = new File("/home/orangepi/jars/persistent/discordToken.txt");	//"C:\\Users\\ASUS\\DarkJudas\\persistent\\discordToken.txt" ; "/home/orangepi/jars/persistent/discordToken.txt"
+			File twitchToken = new File("/home/orangepi/jars/persistent/twitchOAuth.txt");		//"C:\\Users\\ASUS\\DarkJudas\\persistent\\twitchOAuth.txt" ; "/home/orangepi/jars/persistent/twitchOAuth.txt"
 
 			// read the files
 			BufferedReader br1 = new BufferedReader(new FileReader(discordToken));

@@ -93,7 +93,7 @@ public class AspectiBot extends ListenerAdapter {
 		// set up JDA
 		JDA jda = JDABuilder.createDefault(token).setChunkingFilter(ChunkingFilter.ALL)
 				.setMemberCachePolicy(MemberCachePolicy.ALL).enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.MESSAGE_CONTENT).build();
-		jda.getPresence().setStatus(OnlineStatus.ONLINE);
+		jda.getPresence().setStatus(OnlineStatus.IDLE);
 		
 		jda.addEventListener(new DiscordServerListener());
 
@@ -234,7 +234,7 @@ public class AspectiBot extends ListenerAdapter {
 		eventManager.onEvent(ChannelGoLiveEvent.class, event -> {
 			if(streamStatus == StreamStatus.OFFLINE) {
 				streamStatus = StreamStatus.LIVE;
-				jda.getPresence().setStatus(OnlineStatus.DO_NOT_DISTURB);
+				jda.getPresence().setStatus(OnlineStatus.ONLINE);
 				jda.getPresence().setActivity(Activity.watching("Aspecticor's Stream"));
 				String streamTitle = event.getStream().getTitle();
 				jda.getTextChannelById(channelID).sendMessage("<@&882772072475017258> We are live playing \"" + streamTitle
@@ -262,7 +262,7 @@ public class AspectiBot extends ListenerAdapter {
 
 		eventManager.onEvent(ChannelGoOfflineEvent.class, event -> {
 			streamStatus = StreamStatus.OFFLINE;
-			jda.getPresence().setStatus(OnlineStatus.INVISIBLE);
+			jda.getPresence().setStatus(OnlineStatus.IDLE);
 
 			// change icon to Offline version
 			jda.getGuildById(serverID).getManager().setIcon(offlineIcon).queue();
@@ -280,11 +280,9 @@ public class AspectiBot extends ListenerAdapter {
 		eventManager.onEvent(PrivateMessageEvent.class, event -> {
 
 			System.out.println(event.getUser().getName() + " sent " + event.getMessage());
-			
 			if (event.getUser().getName().equalsIgnoreCase("onteia")) {
 				System.out.println(event.getMessage());
-				twitchClient.getChat().sendMessage("aspecticor", event.getMessage());
-
+				twitchClient.getChat().sendMessage("aspecticor", event.getMessage());				
 			}
 
 		});

@@ -3,6 +3,7 @@ package aspectibot;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -101,6 +102,8 @@ public class AspectiBot extends ListenerAdapter {
 			TWITCH_TOKEN_PATH = prop.getProperty("TWITCH_TOKEN_PATH");
 			LIVE_ICON_PATH = prop.getProperty("LIVE_ICON_PATH");
 			OFFLINE_ICON_PATH = prop.getProperty("OFFLINE_ICON_PATH");
+		} catch (FileNotFoundException e) {
+			//no config file
 		} finally {
 			//load credentials
 			loadCredentials();

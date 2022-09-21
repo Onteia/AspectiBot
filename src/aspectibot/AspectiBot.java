@@ -96,13 +96,13 @@ public class AspectiBot extends ListenerAdapter {
 		jda.getPresence().setStatus(OnlineStatus.IDLE);
 		
 		jda.addEventListener(new DiscordServerListener());
-
+/*
 		// load offline and live icons
 		File liveFile = new File("/home/orangepi/jars/persistent/Aspecticor_Live.png"); 
 		File offlineFile = new File("/home/orangepi/jars/persistent/Aspecticor_Offline.png");
 		liveIcon = Icon.from(liveFile);
 		offlineIcon = Icon.from(offlineFile);
-
+*/
 		// set up Twitch4J
 		EventManager eventManager = new EventManager();
 		eventManager.autoDiscovery();
@@ -127,7 +127,7 @@ public class AspectiBot extends ListenerAdapter {
 		// Listen to aspecticor's stream
 		twitchClient.getClientHelper().enableStreamEventListener("aspecticor"); // aspecticor stream listener
 		aspecticorId = twitchClient.getChat().getChannelNameToChannelId().get("aspecticor");
-
+		System.out.println(aspecticorId);
 		// twitchClient.getClientHelper().enableStreamEventListener("onteia"); // onteia
 		// stream listener
 		twitchClient.getPubSub().listenForChannelPointsRedemptionEvents(credential, aspecticorId);
@@ -294,8 +294,8 @@ public class AspectiBot extends ListenerAdapter {
 		try {
 
 			// get the files
-			File discordToken = new File("/home/orangepi/jars/persistent/discordToken.txt");	//"C:\\Users\\ASUS\\DarkJudas\\persistent\\discordToken.txt" ; "/home/orangepi/jars/persistent/discordToken.txt"
-			File twitchToken = new File("/home/orangepi/jars/persistent/twitchOAuth.txt");		//"C:\\Users\\ASUS\\DarkJudas\\persistent\\twitchOAuth.txt" ; "/home/orangepi/jars/persistent/twitchOAuth.txt"
+			File discordToken = new File("C:\\Users\\ASUS\\DarkJudas\\persistent\\discordToken.txt");	//"C:\\Users\\ASUS\\DarkJudas\\persistent\\discordToken.txt" ; "/home/orangepi/jars/persistent/discordToken.txt"
+			File twitchToken = new File("C:\\Users\\ASUS\\DarkJudas\\persistent\\twitchOAuth.txt");		//"C:\\Users\\ASUS\\DarkJudas\\persistent\\twitchOAuth.txt" ; "/home/orangepi/jars/persistent/twitchOAuth.txt"
 
 			// read the files
 			BufferedReader br1 = new BufferedReader(new FileReader(discordToken));

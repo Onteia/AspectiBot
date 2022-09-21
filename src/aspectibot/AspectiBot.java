@@ -2,10 +2,15 @@ package aspectibot;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import com.github.philippheuer.credentialmanager.domain.OAuth2Credential;
 import com.github.philippheuer.events4j.core.EventManager;
@@ -18,7 +23,6 @@ import com.github.twitch4j.events.ChannelGoLiveEvent;
 import com.github.twitch4j.events.ChannelGoOfflineEvent;
 import com.github.twitch4j.helix.domain.Stream;
 import com.github.twitch4j.helix.domain.StreamList;
-import com.github.twitch4j.pubsub.events.RewardRedeemedEvent;
 
 import commands.BrainpowerCommand;
 import commands.EmotesCommand;
@@ -47,59 +51,73 @@ public class AspectiBot extends ListenerAdapter {
 
 	private static String token; // discord token
 	public static String oAuth; // twitch OAuth
-	final public static long serverID = 864273305330909204l; // Aspecticor Discord Server
-	private static String channelID = "885705830341697536"; // #aspecticor-is-live channel
-	public static String logChannelID = "1016876667509166100"; // #server_logs channel
-	private long defaultRole = 885698882695229500l; // Aspecticor default role
+
+	private static String DISCORD_TOKEN_PATH = "/home/orangepi/jars/persistent/discordToken.txt";
+	private static String TWITCH_TOKEN_PATH = "/home/orangepi/jars/persistent/twitchOAuth.txt";
+
+	/* Aspecticord settings */
+	final public static long SERVER_ID = 864273305330909204l; // Aspecticor Discord Server
+	private static String LIVE_CHANNEL_ID = "885705830341697536"; // #aspecticor-is-live channel
+	public static String LOG_CHANNEL_ID = "1016876667509166100"; // #server_logs channel
+	private long DEFAULT_ROLE = 885698882695229500l; // Aspecticor default role
+//	 */
 
 	public static Icon liveIcon;
 	public static Icon offlineIcon;
 
+	public static String LIVE_ICON_PATH = "/home/orangepi/jars/persistent/Aspecticor_Live.png";
+	public static String OFFLINE_ICON_PATH = "/home/orangepi/jars/persistent/Aspecticor_Offline.png";
+
 	public static Stream aspectStream;
 
-	// final public static long serverID = 264217465305825281l; // SELF Discord server
-	// final public static String channelID = "488854205637984266"; // #bot channel
-	// public static long defaultRole = 889224665002836019l;
-	//public static String logChannelID = "488854205637984266"; // #bot channel
-
-
-	// used for !gay command
-	public enum GayMode {
-
-		IDLE, // waiting for stream; default
-		GAY, // fill up gay bar; default once stream starts
-		OFF; // used to test if not active
-
-	}
+	/*
+	public static final long SERVER_ID = 323163248784310282L; // SELF Discord server
+	public static final String LIVE_CHANNEL_ID = "853921144770789397"; // #bot channel
+	public static final String LOG_CHANNEL_ID = "853921144770789397"; // #bot channel
+	public static final long DEFAULT_ROLE = 853934165077393458L;
+	*/
 	
 	public enum StreamStatus {
 		LIVE,
 		OFFLINE;
 	}
 
-	public static int gayCounter = 0;
-	public static GayMode gayMode = GayMode.IDLE;
 	public static StreamStatus streamStatus = StreamStatus.OFFLINE;
+	private static final String ASPECTICOR = "aspecticor";
+	
 	public static String aspecticorId;
-
 	public static TwitchClient twitchClient;
 
 	public static void main(String[] args) throws Exception {
 
-		//load credentials
-		loadCredentials();
-		
+		// https://niruhan.medium.com/how-to-add-a-config-file-to-a-java-project-99fd9b6cebca
+		try (
+			FileInputStream config = new FileInputStream("src/config.properties")
+		) {
+			Properties prop = new Properties();
+			prop.load(config);
+			DISCORD_TOKEN_PATH = prop.getProperty("DISCORD_TOKEN_PATH");
+			TWITCH_TOKEN_PATH = prop.getProperty("TWITCH_TOKEN_PATH");
+			LIVE_ICON_PATH = prop.getProperty("LIVE_ICON_PATH");
+			OFFLINE_ICON_PATH = prop.getProperty("OFFLINE_ICON_PATH");
+		} finally {
+			//load credentials
+			loadCredentials();
+		}
 		
 		// set up JDA
-		JDA jda = JDABuilder.createDefault(token).setChunkingFilter(ChunkingFilter.ALL)
-				.setMemberCachePolicy(MemberCachePolicy.ALL).enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.MESSAGE_CONTENT).build();
+		JDA jda = JDABuilder.createDefault(token)
+				.setChunkingFilter(ChunkingFilter.ALL)
+				.setMemberCachePolicy(MemberCachePolicy.ALL)
+				.enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.MESSAGE_CONTENT)
+				.build();
 		jda.getPresence().setStatus(OnlineStatus.IDLE);
 		
 		jda.addEventListener(new DiscordServerListener());
 
 		// load offline and live icons
-		File liveFile = new File("/home/orangepi/jars/persistent/Aspecticor_Live.png"); 
-		File offlineFile = new File("/home/orangepi/jars/persistent/Aspecticor_Offline.png");
+		File liveFile = new File(LIVE_ICON_PATH); 
+		File offlineFile = new File(OFFLINE_ICON_PATH);
 		liveIcon = Icon.from(liveFile);
 		offlineIcon = Icon.from(offlineFile);
 
@@ -119,27 +137,24 @@ public class AspectiBot extends ListenerAdapter {
 				.withEnableChat(true)
 				.withChatAccount(credential)
 				.withEnablePubSub(true)
+				.withEnableTMI(true)
 				.build();
 
 		// join Aspect's stream
-		twitchClient.getChat().joinChannel("aspecticor");
+		twitchClient.getChat().joinChannel(ASPECTICOR);
 
 		// Listen to aspecticor's stream
-		twitchClient.getClientHelper().enableStreamEventListener("aspecticor"); // aspecticor stream listener
-		aspecticorId = twitchClient.getChat().getChannelNameToChannelId().get("aspecticor");
+		twitchClient.getClientHelper().enableStreamEventListener(ASPECTICOR); // aspecticor stream listener
+		aspecticorId = twitchClient.getChat().getChannelNameToChannelId().get(ASPECTICOR);
 
 		// twitchClient.getClientHelper().enableStreamEventListener("onteia"); // onteia
 		// stream listener
 		twitchClient.getPubSub().listenForChannelPointsRedemptionEvents(credential, aspecticorId);
 
-
-		// gaybar fills up a gay bar, at 100% makes Aspect take his shirt off
-		gayCommand(eventManager, twitchClient, aspecticorId);
-
 		// if Aspecticor is live change activity and status; also change server icon
 		goLive(eventManager, twitchClient, jda);
 
-		// if Aspect turns stream off, change icon back and set status to invisible.
+		// if Aspect turns stream off, change icon back and set status to idle.
 		goOffline(eventManager, twitchClient, jda);
 
 		whisper(eventManager, twitchClient, aspecticorId);
@@ -166,7 +181,7 @@ public class AspectiBot extends ListenerAdapter {
 			
 			if ((command = commands.get(cmd)) != null) { // if the input is in the hashmap
 				
-				twitchClient.getChat().sendMessage("aspecticor", command.response(event), "", event.getMessageEvent().getMessageId().get()); // post the proper response
+				twitchClient.getChat().sendMessage(ASPECTICOR, command.response(event), "", event.getMessageEvent().getMessageId().get()); // post the proper response
 				
 			}
 
@@ -175,59 +190,15 @@ public class AspectiBot extends ListenerAdapter {
 
 	} // end of main method
 
+	@Override
 	public void onGuildMemberJoin(GuildMemberJoinEvent event) {
 
 		// get the member who joined
 		Member member = event.getMember();
 		// give member who joined the default role
-		event.getJDA().getGuildById(serverID).addRoleToMember(member, event.getJDA().getRoleById(defaultRole)).queue();
+		event.getJDA().getGuildById(SERVER_ID).addRoleToMember(member, event.getJDA().getRoleById(DEFAULT_ROLE)).queue();
 
 	} // end of onGuildMemberJoin method
-
-	
-
-	public static void gayCommand(EventManager eventManager, TwitchClient twitchClient, String aspecticorId) {
-
-		eventManager.onEvent(RewardRedeemedEvent.class, event -> {
-
-			// System.out.println("[" + event.getChannel().getName() + "] " +
-			// event.getUser().getName() + ": " + event.getMessage());
-
-			// String user = event.getRedemption().getUser().getDisplayName();
-			String reward = event.getRedemption().getReward().getTitle();
-
-			if (reward.equalsIgnoreCase("GAI")) {
-
-				//String rewardId = event.getRedemption().getReward().getId();
-				String redeemId = event.getRedemption().getId();
-
-				ArrayList<String> redeemList = new ArrayList<String>();
-				redeemList.add(redeemId);
-
-				gayCounter++;
-
-				if (gayCounter >= 100 && gayMode == GayMode.GAY) {
-
-					twitchClient.getChat().sendMessage("aspecticor",
-							"@Aspecticor GayBar is FULL!!! TAKE KappaPride OFF KappaPride SHIRT KappaPride @Aspecticor");
-					gayMode = GayMode.OFF;
-
-				} else {
-
-					if (gayCounter % 10 == 0) {
-
-						twitchClient.getChat().sendMessage("aspecticor", "GayBar: " + gayCounter + "%");
-
-					}
-				}
-
-				// twitchClient.getHelix().updateRedemptionStatus(oAuth, aspecticorId, rewardId, redeemId, RedemptionStatus.FULFILLED);
-
-			}
-
-		});
-
-	}
 
 	public static void goLive(EventManager eventManager, TwitchClient twitchClient, JDA jda) {
 
@@ -237,15 +208,11 @@ public class AspectiBot extends ListenerAdapter {
 				jda.getPresence().setStatus(OnlineStatus.ONLINE);
 				jda.getPresence().setActivity(Activity.watching("Aspecticor's Stream"));
 				String streamTitle = event.getStream().getTitle();
-				jda.getTextChannelById(channelID).sendMessage("<@&882772072475017258> We are live playing \"" + streamTitle
+				jda.getTextChannelById(LIVE_CHANNEL_ID).sendMessage("<@&882772072475017258> We are live playing \"" + streamTitle
 						+ "\" ***right now!***\nhttps://www.twitch.tv/aspecticor").queue();
 	
 				// change icon to Live version
-				jda.getGuildById(serverID).getManager().setIcon(liveIcon).queue();
-	
-				// enable !gay and reset it
-				gayCounter = 0;
-				gayMode = GayMode.GAY;
+				jda.getGuildById(SERVER_ID).getManager().setIcon(liveIcon).queue();
 	
 				// get aspect's stream
 				ArrayList<String> stringList = new ArrayList<String>();
@@ -265,46 +232,55 @@ public class AspectiBot extends ListenerAdapter {
 			jda.getPresence().setStatus(OnlineStatus.IDLE);
 
 			// change icon to Offline version
-			jda.getGuildById(serverID).getManager().setIcon(offlineIcon).queue();
-
-			// reset and disable !gay
-			gayCounter = 0;
-			gayMode = GayMode.IDLE;
-
+			jda.getGuildById(SERVER_ID).getManager().setIcon(offlineIcon).queue();
 		});
 
 	} // end of goOffline method
 
 	public static void whisper(EventManager eventManager, TwitchClient twitchClient, String aspecticorId) {
-
+		// if a mod in twitch channel whispers bot, send chat to that twitch channel
 		eventManager.onEvent(PrivateMessageEvent.class, event -> {
+			List<String> mods = null;
+			System.out.print(event.getUser().getName() + " sent " + event.getMessage());
+			try {
+				mods = twitchClient.getMessagingInterface()
+								   .getChatters(ASPECTICOR)
+								   .execute()
+								   .getModerators();
+			} catch (Exception e) {
+				StringWriter sw = new StringWriter();
+			e.printStackTrace(new PrintWriter(sw));
+				System.err.println(sw.toString());
+			} finally {
+				System.out.println(mods);
+				if (mods.contains(event.getUser().getName())) {
 
-			System.out.println(event.getUser().getName() + " sent " + event.getMessage());
-			if (event.getUser().getName().equalsIgnoreCase("onteia")) {
-				System.out.println(event.getMessage());
-				twitchClient.getChat().sendMessage("aspecticor", event.getMessage());				
+					twitchClient.getChat().sendMessage(ASPECTICOR, event.getMessage());
+
+				}
 			}
-
 		});
 	
 	} // end of onWhisper method
 	
+
 	public static void loadCredentials() {
 		
 		try {
-
+			
 			// get the files
-			File discordToken = new File("/home/orangepi/jars/persistent/discordToken.txt");	//"C:\\Users\\ASUS\\DarkJudas\\persistent\\discordToken.txt" ; "/home/orangepi/jars/persistent/discordToken.txt"
-			File twitchToken = new File("/home/orangepi/jars/persistent/twitchOAuth.txt");		//"C:\\Users\\ASUS\\DarkJudas\\persistent\\twitchOAuth.txt" ; "/home/orangepi/jars/persistent/twitchOAuth.txt"
-
+			File discordToken = new File(DISCORD_TOKEN_PATH);	//"C:\\Users\\ASUS\\DarkJudas\\persistent\\discordToken.txt" ; "/home/orangepi/jars/persistent/discordToken.txt"
+			File twitchToken = new File(TWITCH_TOKEN_PATH);		//"C:\\Users\\ASUS\\DarkJudas\\persistent\\twitchOAuth.txt" ; "/home/orangepi/jars/persistent/twitchOAuth.txt"
+			
 			// read the files
-			BufferedReader br1 = new BufferedReader(new FileReader(discordToken));
-			BufferedReader br2 = new BufferedReader(new FileReader(twitchToken));
-			token = br1.readLine();
-			oAuth = br2.readLine();
-			br1.close();
-			br2.close();
-
+			// https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html
+			try (
+				BufferedReader br1 = new BufferedReader(new FileReader(discordToken));
+				BufferedReader br2 = new BufferedReader(new FileReader(twitchToken));
+			) {
+				token = br1.readLine();
+				oAuth = br2.readLine();
+			}
 		} catch (Exception e) {
 
 			System.err.println("Authentication Failed");

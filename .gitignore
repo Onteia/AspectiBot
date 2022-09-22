@@ -1,2 +1,3 @@
 *.txt
 src/config.properties
+target/classes/config.properties

@@ -1,15 +1,14 @@
 package aspectibot;
 
 import java.time.format.DateTimeFormatter;
+
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.MessageReaction;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
-import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
 
@@ -19,7 +18,7 @@ public class DiscordServerListener extends ListenerAdapter {
 	public void onMessageReceived(MessageReceivedEvent event) {
 		Message message = event.getMessage();
 		Member m = event.getMember();
-		TextChannel channel = event.getChannel().asTextChannel();
+		TextChannel channel = event.getChannel().asTextChannel(); //$ should change type to MessageChannel
 		Guild guild = channel.getGuild();
 		
 		if(Long.valueOf(guild.getId()) == AspectiBot.SERVER_ID

@@ -35,7 +35,6 @@ import commands.LogShowCommand;
 import commands.LurkCommand;
 import commands.PbCommand;
 import commands.TwitterCommand;
-import commands.UptimeCommand;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.OnlineStatus;
@@ -54,24 +53,20 @@ public class AspectiBot extends ListenerAdapter {
 	public static String oAuth; // twitch OAuth
 
 	private static String DISCORD_TOKEN_PATH = "/home/orangepi/jars/persistent/discordToken.txt";
-	//"C:\\Users\\ASUS\\DarkJudas\\persistent\\discordToken.txt" ; "/home/orangepi/jars/persistent/discordToken.txt"
 	private static String TWITCH_TOKEN_PATH = "/home/orangepi/jars/persistent/twitchOAuth.txt";
-	//"C:\\Users\\ASUS\\DarkJudas\\persistent\\twitchOAuth.txt" ; "/home/orangepi/jars/persistent/twitchOAuth.txt"
-
-	/* Aspecticord settings */
 	
-	final public static long SERVER_ID = 864273305330909204L; // Aspecticor Discord Server
+	/* Aspecticord settings */
+	final public static long SERVER_ID = 864273305330909204L; // Aspecticord Server ID
 	private static long LIVE_CHANNEL_ID = 885705830341697536L; // #aspecticor-is-live channel
 	public static long LOG_CHANNEL_ID = 1016876667509166100L; // #server_logs channel
-	private long DEFAULT_ROLE = 885698882695229500l; // Aspecticor default role
+	private long DEFAULT_ROLE = 885698882695229500L; // Aspecticord default role
+	final private static long PING_ROLE = 882772072475017258L; // Aspecticord @TWITCH_PINGS	
 	
 	public static Icon liveIcon;
 	public static Icon offlineIcon;
 
 	public static String LIVE_ICON_PATH = "/home/orangepi/jars/persistent/Aspecticor_Live.png";
-	//"C:\\Users\\ASUS\\DarkJudas\\persistent\\Aspecticor_Live.png" ; "/home/orangepi/jars/persistent/Aspecticor_Live.png"
 	public static String OFFLINE_ICON_PATH = "/home/orangepi/jars/persistent/Aspecticor_Offline.png";
-	//"C:\\Users\\ASUS\\DarkJudas\\persistent\\Aspecticor_Offline.png" ; "/home/orangepi/jars/persistent/Aspecticor_Offline.png"
 	
 	public static Stream aspectStream;
 
@@ -118,8 +113,7 @@ public class AspectiBot extends ListenerAdapter {
 				.setMemberCachePolicy(MemberCachePolicy.ALL)
 				.enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.MESSAGE_CONTENT)
 				.build();
-		jda.getPresence().setStatus(OnlineStatus.IDLE);
-		
+		jda.getPresence().setStatus(OnlineStatus.IDLE);	
 		jda.addEventListener(new DiscordServerListener());
 
 		// load offline and live icons
@@ -154,10 +148,6 @@ public class AspectiBot extends ListenerAdapter {
 		twitchClient.getClientHelper().enableStreamEventListener(ASPECTICOR); // aspecticor stream listener
 		aspecticorId = twitchClient.getChat().getChannelNameToChannelId().get(ASPECTICOR);
 
-		// twitchClient.getClientHelper().enableStreamEventListener("onteia"); // onteia
-		// stream listener
-		twitchClient.getPubSub().listenForChannelPointsRedemptionEvents(credential, aspecticorId);
-
 		// if Aspecticor is live change activity and status; also change server icon
 		goLive(eventManager, twitchClient, jda);
 
@@ -170,11 +160,10 @@ public class AspectiBot extends ListenerAdapter {
 
 		commands.put("!brainpower", new BrainpowerCommand());
 		commands.put("!emotes", new EmotesCommand());
-		commands.put("!leaderboard", new LeaderboardCommand());
+		commands.put("!leaderboards", new LeaderboardCommand());
 		commands.put("!lurk", new LurkCommand());
 		commands.put("!pb", new PbCommand());
 		commands.put("!twitter", new TwitterCommand());
-		commands.put("!uptime", new UptimeCommand());
 		commands.put("!addcom", new LogAddCommand());
 		commands.put("!showcom", new LogShowCommand());
 		commands.put("!delcom", new LogDeleteCommand());
@@ -215,7 +204,7 @@ public class AspectiBot extends ListenerAdapter {
 				jda.getPresence().setStatus(OnlineStatus.ONLINE);
 				jda.getPresence().setActivity(Activity.watching("Aspecticor's Stream"));
 				String streamTitle = event.getStream().getTitle();
-				jda.getTextChannelById(LIVE_CHANNEL_ID).sendMessage("<@&882772072475017258> We are live playing \"" + streamTitle
+				jda.getTextChannelById(LIVE_CHANNEL_ID).sendMessage("<@&"+ PING_ROLE +"> We are live playing \"" + streamTitle
 						+ "\" ***right now!***\nhttps://www.twitch.tv/aspecticor").queue();
 	
 				// change icon to Live version

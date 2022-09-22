@@ -7,7 +7,6 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,8 +21,6 @@ import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
 import com.github.twitch4j.common.events.user.PrivateMessageEvent;
 import com.github.twitch4j.events.ChannelGoLiveEvent;
 import com.github.twitch4j.events.ChannelGoOfflineEvent;
-import com.github.twitch4j.helix.domain.Stream;
-import com.github.twitch4j.helix.domain.StreamList;
 
 import commands.BrainpowerCommand;
 import commands.EmotesCommand;
@@ -60,20 +57,20 @@ public class AspectiBot extends ListenerAdapter {
 	private static long LIVE_CHANNEL_ID = 885705830341697536L; // #aspecticor-is-live channel
 	public static long LOG_CHANNEL_ID = 1016876667509166100L; // #server_logs channel
 	private long DEFAULT_ROLE = 885698882695229500L; // Aspecticord default role
-	final private static long PING_ROLE = 882772072475017258L; // Aspecticord @TWITCH_PINGS	
+	final private static String PING_ROLE = "882772072475017258"; // Aspecticord @TWITCH_PINGS	
+	
 	
 	public static Icon liveIcon;
 	public static Icon offlineIcon;
 
 	public static String LIVE_ICON_PATH = "/home/orangepi/jars/persistent/Aspecticor_Live.png";
 	public static String OFFLINE_ICON_PATH = "/home/orangepi/jars/persistent/Aspecticor_Offline.png";
-	
-	public static Stream aspectStream;
 
+	
 	/*
 	public static final long SERVER_ID = 264217465305825281L; // SELF Discord server
-	public static final long LIVE_CHANNEL_ID = 488854205637984266L; // #bot channel
-	public static final long LOG_CHANNEL_ID = 488854205637984266L; // #bot channel
+	public static final long LIVE_CHANNEL_ID = 1022422500161900634L; // #bot channel
+	public static final long LOG_CHANNEL_ID = 1022427876609495100L; // #bot channel
 	public static final long DEFAULT_ROLE = 963139708655919145L;
 	*/
 	
@@ -183,7 +180,6 @@ public class AspectiBot extends ListenerAdapter {
 
 		});
 
-
 	} // end of main method
 
 	@Override
@@ -204,18 +200,12 @@ public class AspectiBot extends ListenerAdapter {
 				jda.getPresence().setStatus(OnlineStatus.ONLINE);
 				jda.getPresence().setActivity(Activity.watching("Aspecticor's Stream"));
 				String streamTitle = event.getStream().getTitle();
-				jda.getTextChannelById(LIVE_CHANNEL_ID).sendMessage("<@&"+ PING_ROLE +"> We are live playing \"" + streamTitle
+				jda.getNewsChannelById(LIVE_CHANNEL_ID).sendMessage("<@&"+ PING_ROLE +"> We are live playing \"" + streamTitle
 						+ "\" ***right now!***\nhttps://www.twitch.tv/aspecticor").queue();
 	
 				// change icon to Live version
 				jda.getGuildById(SERVER_ID).getManager().setIcon(liveIcon).queue();
 	
-				// get aspect's stream
-				ArrayList<String> stringList = new ArrayList<String>();
-				stringList.add(aspecticorId);
-				StreamList streams = twitchClient.getHelix().getStreams(oAuth, "", "", 1, null, null, stringList, null)
-						.execute();
-				aspectStream = streams.getStreams().get(0);
 			}
 		});
 

@@ -49,28 +49,35 @@ import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 
 public class AspectiBot extends ListenerAdapter {
-
-	// CHANGE THESE VARIABLES
 	
 	private static final String ASPECTICOR = "aspecticor";
+	private static final String CONFIG_FILE = "src/config.properties";
+
+	private static String DISCORD_TOKEN_PATH;
+	private static String TWITCH_TOKEN_PATH;
+	private static String LIVE_ICON_PATH;
+	private static String OFFLINE_ICON_PATH;
 	
-	private static String DISCORD_TOKEN_PATH = "/home/orangepi/jars/persistent/discordToken.txt";
-	private static String TWITCH_TOKEN_PATH = "/home/orangepi/jars/persistent/twitchOAuth.txt";
-	
-	/* Aspecticord settings */
-	final public static long SERVER_ID = 864273305330909204L; // Aspecticord Server ID
-	private static long LIVE_CHANNEL_ID = 885705830341697536L; // #aspecticor-is-live channel
-	public static long LOG_CHANNEL_ID = 1016876667509166100L; // #server_logs channel
-	private long DEFAULT_ROLE = 885698882695229500L; // Aspecticord default role
-	final private static long PING_ROLE = 882772072475017258L; // Aspecticord @TWITCH_PINGS	
+	/* Aspecticord settings 
+	public static final long SERVER_ID = 864273305330909204L; // Aspecticord Server ID
+	private static final long LIVE_CHANNEL_ID = 885705830341697536L; // #aspecticor-is-live channel
+	public static final long LOG_CHANNEL_ID = 1016876667509166100L; // #server_logs channel
+	private final long DEFAULT_ROLE = 885698882695229500L; // Aspecticord default role
+	private static final long PING_ROLE = 882772072475017258L; // Aspecticord @TWITCH_PINGS	
+	*/
+	// /*
+	public static final long SERVER_ID = 323163248784310282L; // SELF Discord server
+	public static final long LIVE_CHANNEL_ID = 853921144770789397L; // #bot channel
+	public static final long LOG_CHANNEL_ID = 853921144770789397L; // #bot channel
+	public static final long DEFAULT_ROLE = 1021612400790741014L;
+	public static final long PING_ROLE = 323658129080320000L;
+	// */
+
 	
 	private static String token; // discord token
 	public static String oAuth; // twitch OAuth
 	public static Icon liveIcon;
 	public static Icon offlineIcon;
-
-	public static String LIVE_ICON_PATH = "/home/orangepi/jars/persistent/Aspecticor_Live.png";
-	public static String OFFLINE_ICON_PATH = "/home/orangepi/jars/persistent/Aspecticor_Offline.png";
 	
 	public static Stream aspectStream;
 	
@@ -90,7 +97,7 @@ public class AspectiBot extends ListenerAdapter {
 
 		// https://niruhan.medium.com/how-to-add-a-config-file-to-a-java-project-99fd9b6cebca
 		try (
-			FileInputStream config = new FileInputStream("src/config.properties")
+			FileInputStream config = new FileInputStream(CONFIG_FILE);
 		) {
 			Properties prop = new Properties();
 			prop.load(config);
@@ -100,6 +107,10 @@ public class AspectiBot extends ListenerAdapter {
 			OFFLINE_ICON_PATH = prop.getProperty("OFFLINE_ICON_PATH");
 		} catch (FileNotFoundException e) {
 			//no config file
+			DISCORD_TOKEN_PATH = "/home/orangepi/jars/persistent/discordToken.txt";
+			TWITCH_TOKEN_PATH = "/home/orangepi/jars/persistent/twitchOAuth.txt";
+			LIVE_ICON_PATH = "/home/orangepi/jars/persistent/Aspecticor_Live.png";
+			OFFLINE_ICON_PATH = "/home/orangepi/jars/persistent/Aspecticor_Offline.png";
 		} finally {
 			//load credentials
 			loadCredentials();
@@ -143,10 +154,11 @@ public class AspectiBot extends ListenerAdapter {
 		twitchClient.getChat().joinChannel(ASPECTICOR);	
 
 		// Listen to aspecticor's stream
-		twitchClient.getClientHelper().enableStreamEventListener(ASPECTICOR); // aspecticor stream listener
+		twitchClient.getClientHelper().enableStreamEventListener(ASPECTICOR);
 		aspecticorId = twitchClient.getChat().getChannelNameToChannelId().get(ASPECTICOR);
 
-		// if Aspecticor is live change activity and status; also change server icon
+		// if Aspecticor is live change activity and status
+		// also change server icon
 		goLive(eventManager, twitchClient, jda);
 
 		// if Aspect turns stream off, change icon back and set status to idle.
@@ -173,10 +185,13 @@ public class AspectiBot extends ListenerAdapter {
 
 			TwitchCommand command;
 			
-			if ((command = commands.get(cmd)) != null) { // if the input is in the hashmap
+			if ((command = commands.get(cmd)) != null) { 
+				// if the input is in the hashmap
 				
-				twitchClient.getChat().sendMessage(ASPECTICOR, command.response(event), "", event.getMessageEvent().getMessageId().get()); // post the proper response
-				
+				twitchClient.getChat().sendMessage(
+					ASPECTICOR, command.response(event), 
+					"", event.getMessageEvent().getMessageId().get()); 
+					// post the proper response
 			}
 
 		});
@@ -202,9 +217,11 @@ public class AspectiBot extends ListenerAdapter {
 				jda.getPresence().setStatus(OnlineStatus.ONLINE);
 				jda.getPresence().setActivity(Activity.watching("Aspecticor's Stream"));
 				String streamTitle = event.getStream().getTitle();
-				jda.getTextChannelById(LIVE_CHANNEL_ID).sendMessage("<@&"+ PING_ROLE +"> We are live playing \"" + streamTitle
-						+ "\" ***right now!***\nhttps://www.twitch.tv/aspecticor").queue();
-	
+				
+				jda.getTextChannelById(LIVE_CHANNEL_ID).sendMessage(
+					"<@&"+ PING_ROLE +"> We are live playing \"" + streamTitle
+					+ "\" ***right now!***\nhttps://www.twitch.tv/aspecticor"
+				).queue();
 				// change icon to Live version
 				jda.getGuildById(SERVER_ID).getManager().setIcon(liveIcon).queue();
 	

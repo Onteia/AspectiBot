@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Random;
 
 import com.github.philippheuer.credentialmanager.domain.OAuth2Credential;
 import com.github.philippheuer.events4j.core.EventManager;
@@ -45,12 +46,14 @@ import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 
 public class AspectiBot extends ListenerAdapter {
+	
+	private static final String ASPECTICOR = "aspecticor";
+	private static final String CONFIG_FILE = "src/config.properties";
 
-	private static String token; // discord token
-	public static String oAuth; // twitch OAuth
-
-	private static String DISCORD_TOKEN_PATH = "/home/orangepi/jars/persistent/discordToken.txt";
-	private static String TWITCH_TOKEN_PATH = "/home/orangepi/jars/persistent/twitchOAuth.txt";
+	private static String DISCORD_TOKEN_PATH;
+	private static String TWITCH_TOKEN_PATH;
+	private static String LIVE_ICON_PATH;
+	private static String OFFLINE_ICON_PATH;
 	
 	/* Aspecticord settings */
 	final public static long SERVER_ID = 864273305330909204L; // Aspecticord Server ID
@@ -59,37 +62,35 @@ public class AspectiBot extends ListenerAdapter {
 	private long DEFAULT_ROLE = 885698882695229500L; // Aspecticord default role
 	final private static String PING_ROLE = "882772072475017258"; // Aspecticord @TWITCH_PINGS	
 	
-	
-	public static Icon liveIcon;
-	public static Icon offlineIcon;
-
-	public static String LIVE_ICON_PATH = "/home/orangepi/jars/persistent/Aspecticor_Live.png";
-	public static String OFFLINE_ICON_PATH = "/home/orangepi/jars/persistent/Aspecticor_Offline.png";
-
-	
 	/*
 	public static final long SERVER_ID = 264217465305825281L; // SELF Discord server
 	public static final long LIVE_CHANNEL_ID = 1022422500161900634L; // #bot channel
 	public static final long LOG_CHANNEL_ID = 1022427876609495100L; // #bot channel
 	public static final long DEFAULT_ROLE = 963139708655919145L;
 	*/
+
+	private static String token; // discord token
+	public static String oAuth; // twitch OAuth
+	public static Icon liveIcon;
+	public static Icon offlineIcon;
 	
 	public enum StreamStatus {
 		LIVE,
 		OFFLINE;
 	}
 
-	public static StreamStatus streamStatus = StreamStatus.OFFLINE;
-	private static final String ASPECTICOR = "aspecticor";
+	private static StreamStatus streamStatus = StreamStatus.OFFLINE;
 	
 	public static String aspecticorId;
 	public static TwitchClient twitchClient;
+
+	private static Random r = new Random();
 
 	public static void main(String[] args) throws Exception {
 
 		// https://niruhan.medium.com/how-to-add-a-config-file-to-a-java-project-99fd9b6cebca
 		try (
-			FileInputStream config = new FileInputStream("src/config.properties")
+			FileInputStream config = new FileInputStream(CONFIG_FILE);
 		) {
 			Properties prop = new Properties();
 			prop.load(config);
@@ -99,6 +100,10 @@ public class AspectiBot extends ListenerAdapter {
 			OFFLINE_ICON_PATH = prop.getProperty("OFFLINE_ICON_PATH");
 		} catch (FileNotFoundException e) {
 			//no config file
+			DISCORD_TOKEN_PATH = "/home/orangepi/jars/persistent/discordToken.txt";
+			TWITCH_TOKEN_PATH = "/home/orangepi/jars/persistent/twitchOAuth.txt";
+			LIVE_ICON_PATH = "/home/orangepi/jars/persistent/Aspecticor_Live.png";
+			OFFLINE_ICON_PATH = "/home/orangepi/jars/persistent/Aspecticor_Offline.png";
 		} finally {
 			//load credentials
 			loadCredentials();
@@ -142,10 +147,11 @@ public class AspectiBot extends ListenerAdapter {
 		twitchClient.getChat().joinChannel(ASPECTICOR);	
 
 		// Listen to aspecticor's stream
-		twitchClient.getClientHelper().enableStreamEventListener(ASPECTICOR); // aspecticor stream listener
+		twitchClient.getClientHelper().enableStreamEventListener(ASPECTICOR);
 		aspecticorId = twitchClient.getChat().getChannelNameToChannelId().get(ASPECTICOR);
 
-		// if Aspecticor is live change activity and status; also change server icon
+		// if Aspecticor is live change activity and status
+		// also change server icon
 		goLive(eventManager, twitchClient, jda);
 
 		// if Aspect turns stream off, change icon back and set status to idle.
@@ -172,10 +178,13 @@ public class AspectiBot extends ListenerAdapter {
 
 			TwitchCommand command;
 			
-			if ((command = commands.get(cmd)) != null) { // if the input is in the hashmap
+			if ((command = commands.get(cmd)) != null) { 
+				// if the input is in the hashmap
 				
-				twitchClient.getChat().sendMessage(ASPECTICOR, command.response(event), "", event.getMessageEvent().getMessageId().get()); // post the proper response
-				
+				twitchClient.getChat().sendMessage(
+					ASPECTICOR, command.response(event), 
+					"", event.getMessageEvent().getMessageId().get()); 
+					// post the proper response
 			}
 
 		});
@@ -200,12 +209,15 @@ public class AspectiBot extends ListenerAdapter {
 				jda.getPresence().setStatus(OnlineStatus.ONLINE);
 				jda.getPresence().setActivity(Activity.watching("Aspecticor's Stream"));
 				String streamTitle = event.getStream().getTitle();
-				jda.getNewsChannelById(LIVE_CHANNEL_ID).sendMessage("<@&"+ PING_ROLE +"> We are live playing \"" + streamTitle
-						+ "\" ***right now!***\nhttps://www.twitch.tv/aspecticor").queue();
+
+				jda.getNewsChannelById(LIVE_CHANNEL_ID).sendMessage(
+						"<@&"+ PING_ROLE +"> We are live playing \"" + streamTitle
+						+ "\" ***right now!***\nhttps://www.twitch.tv/aspecticor"
+				).queue();
 	
 				// change icon to Live version
 				jda.getGuildById(SERVER_ID).getManager().setIcon(liveIcon).queue();
-	
+
 			}
 		});
 
@@ -218,25 +230,31 @@ public class AspectiBot extends ListenerAdapter {
 			jda.getPresence().setStatus(OnlineStatus.IDLE);
 			
 			//credit: https://whaa.dev/how-to-generate-random-characters-in-java
-			String randomKey = "";
+			StringBuilder randomKey = new StringBuilder();
 			for(int i = 0; i < 30; i++) {
-				char randomCharacter = (char)((new java.util.Random().nextBoolean() ? 'a' : 'A') + new java.util.Random().nextInt(26));
-				randomKey += randomCharacter;
+				char randomCharacter = (char)((r.nextBoolean() ? 'a' : 'A') + r.nextInt(26));
+				randomKey.append(randomCharacter);
 			}
 			
-			String fakeKey = "live_" + (( int) Math.floor(Math.random()*1000000000)) + "_" + randomKey;
-			String[] randResponses = {"Aspecticor's VODS", "Aspecticor's Clips", 
-					"Aspecticor's YT Videos", "Aspecticor's TikToks", "Aspecticor get cancelled on Twitter",
+			String fakeKey = "live_" + r.nextInt(1000000000) + "_" + randomKey.toString();
+			String[] randResponses = {"Aspecticor's VODS", "Aspecticor's Clips",
+					"Aspecticor's YT Videos", "Aspecticor's TikToks", 
+					"Aspecticor get cancelled on Twitter",
 					"Aspecticor die of liver failure", "Aspecticor's TED Talk", 
-					"Aspecticor's Brentwood College School Musical Performance", "Aspecticor's WACK ASS NAILS grow",
-					"Aspecticor do a flip", "Aspecticor falling into the toilet yet again", 
-					"chaos ensue on Aspecticor's dying Subreddit", "Aspecticor going back to Paris",
-					"Aspecticor's mouse get stolen by Hitman again", "an NPC catch Aspecticor's heinous crimes",
-					"Aspecticor's bi flag get torn down by Mercs", "Aspecticor and Katie's DNA tests being a direct match",
-					"Aspecticor go live without looking at his DMs", "Soylent Splive believe in yet another conspiracy theory",
-					"Aspecticor watch 'cutscenes'", "Mercs assault the top of Aspecticor's chair", "Mercs do a WICKED jump",
-					"Aspecticor leak his stream key: " + fakeKey};
-			jda.getPresence().setActivity(Activity.watching(randResponses[(int) Math.floor(Math.random()*randResponses.length)]));
+					"Aspecticor's Brentwood College School Musical Performance",
+					"Aspecticor's WACK ASS NAILS grow", "Aspecticor do a flip", 
+					"Aspecticor falling into the toilet yet again", 
+					"chaos ensue on Aspecticor's dying Subreddit", 
+					"Aspecticor going back to Paris",
+					"Aspecticor's mouse get stolen by Hitman again", 
+					"an NPC catch Aspecticor's heinous crimes",
+					"Aspecticor's bi flag get torn down by Mercs", 
+					"Aspecticor and Katie's DNA tests being a direct match",
+					"Aspecticor go live without looking at his DMs", 
+					"Soylent Splive believe in yet another conspiracy theory",
+					"Aspecticor watch 'cutscenes'", "Mercs assault the top of Aspecticor's chair", 
+					"Mercs do a WICKED jump", "Aspecticor leak his stream key: " + fakeKey};
+			jda.getPresence().setActivity(Activity.watching(randResponses[r.nextInt(randResponses.length)]));
 			
 			// change icon to Offline version
 			jda.getGuildById(SERVER_ID).getManager().setIcon(offlineIcon).queue();

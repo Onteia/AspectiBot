@@ -6,7 +6,6 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
@@ -72,6 +71,7 @@ public class DiscordServerListener extends ListenerAdapter {
 			logMessage.clear();
 		
 		}
+		
 	}
 	
 	@Override
@@ -80,7 +80,14 @@ public class DiscordServerListener extends ListenerAdapter {
 		Message message = event.getMessage();
 		
 		Member m = event.getMember();
-		TextChannel channel = event.getChannel().asTextChannel();
+		GuildChannel channel;
+		
+		if(event.getChannelType().isAudio()) {
+			channel = event.getChannel().asVoiceChannel();
+		} else {
+			channel = event.getChannel().asGuildMessageChannel();
+		}
+		
 		Guild guild = channel.getGuild();
 		
 		if(Long.valueOf(guild.getId()) == AspectiBot.SERVER_ID

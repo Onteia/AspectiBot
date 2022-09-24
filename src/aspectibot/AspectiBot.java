@@ -7,6 +7,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,8 +21,13 @@ import com.github.twitch4j.TwitchClient;
 import com.github.twitch4j.TwitchClientBuilder;
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
 import com.github.twitch4j.common.events.user.PrivateMessageEvent;
+import com.github.twitch4j.common.util.CryptoUtils;
+import com.github.twitch4j.events.ChannelChangeGameEvent;
+import com.github.twitch4j.events.ChannelChangeTitleEvent;
 import com.github.twitch4j.events.ChannelGoLiveEvent;
 import com.github.twitch4j.events.ChannelGoOfflineEvent;
+import com.github.twitch4j.events.ChannelViewerCountUpdateEvent;
+import com.github.twitch4j.helix.domain.Stream;
 
 import commands.BrainpowerCommand;
 import commands.EmotesCommand;
@@ -33,12 +39,14 @@ import commands.LogShowCommand;
 import commands.LurkCommand;
 import commands.PbCommand;
 import commands.TwitterCommand;
+import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.Icon;
 import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.GatewayIntent;
@@ -62,12 +70,12 @@ public class AspectiBot extends ListenerAdapter {
 	private long DEFAULT_ROLE = 885698882695229500L; // Aspecticord default role
 	final private static String PING_ROLE = "882772072475017258"; // Aspecticord @TWITCH_PINGS	
 	
-	/*
+	 /*
 	public static final long SERVER_ID = 264217465305825281L; // SELF Discord server
 	public static final long LIVE_CHANNEL_ID = 1022422500161900634L; // #bot channel
 	public static final long LOG_CHANNEL_ID = 1022427876609495100L; // #bot channel
 	public static final long DEFAULT_ROLE = 963139708655919145L;
-	*/
+	 */
 
 	private static String token; // discord token
 	public static String oAuth; // twitch OAuth
@@ -83,6 +91,7 @@ public class AspectiBot extends ListenerAdapter {
 	
 	public static String aspecticorId;
 	public static TwitchClient twitchClient;
+	public static Message streamNotificationMessage = null;
 
 	private static Random r = new Random();
 
@@ -208,17 +217,33 @@ public class AspectiBot extends ListenerAdapter {
 				streamStatus = StreamStatus.LIVE;
 				jda.getPresence().setStatus(OnlineStatus.ONLINE);
 				jda.getPresence().setActivity(Activity.watching("Aspecticor's Stream"));
-				String streamTitle = event.getStream().getTitle();
-
-				jda.getNewsChannelById(LIVE_CHANNEL_ID).sendMessage(
-						"<@&"+ PING_ROLE +"> We are live playing \"" + streamTitle
-						+ "\" ***right now!***\nhttps://www.twitch.tv/aspecticor"
+				
+				EmbedBuilder goLiveEmbed = formatEmbed(event.getStream());	
+				jda.getNewsChannelById(AspectiBot.LIVE_CHANNEL_ID).sendMessage(
+						"<@&"+ PING_ROLE +"> HE'S LIVE!!!"
 				).queue();
-	
+				streamNotificationMessage = jda.getNewsChannelById(AspectiBot.LIVE_CHANNEL_ID).sendMessageEmbeds(goLiveEmbed.build()).complete();
+				
 				// change icon to Live version
 				jda.getGuildById(SERVER_ID).getManager().setIcon(liveIcon).queue();
 
 			}
+		});
+		// Update stream info when title is changed
+		eventManager.onEvent(ChannelChangeTitleEvent.class, event -> {
+			EmbedBuilder newEmbed = formatEmbed(event.getStream());
+			streamNotificationMessage = streamNotificationMessage.editMessageEmbeds(newEmbed.build()).complete();
+		});
+		// Update stream info when game/category is changed
+		eventManager.onEvent(ChannelChangeGameEvent.class, event -> {
+			EmbedBuilder newEmbed = formatEmbed(event.getStream());
+			streamNotificationMessage = streamNotificationMessage.editMessageEmbeds(newEmbed.build()).complete();
+		});
+		// Update stream info when viewercount changes
+		eventManager.onEvent(ChannelViewerCountUpdateEvent.class, event -> {
+			System.err.println("Change in viewer count");
+			EmbedBuilder newEmbed = formatEmbed(event.getStream());
+			streamNotificationMessage = streamNotificationMessage.editMessageEmbeds(newEmbed.build()).complete();
 		});
 
 	}
@@ -256,6 +281,8 @@ public class AspectiBot extends ListenerAdapter {
 					"Mercs do a WICKED jump", "Aspecticor leak his stream key: " + fakeKey};
 			jda.getPresence().setActivity(Activity.watching(randResponses[r.nextInt(randResponses.length)]));
 			
+			streamNotificationMessage = null;
+			
 			// change icon to Offline version
 			jda.getGuildById(SERVER_ID).getManager().setIcon(offlineIcon).queue();
 		});
@@ -288,7 +315,58 @@ public class AspectiBot extends ListenerAdapter {
 	
 	} // end of onWhisper method
 	
-
+	public static EmbedBuilder formatEmbed(Stream twitchStream) {
+		
+		String streamTitle = twitchStream.getTitle();
+		String streamGame = twitchStream.getGameName();
+		String streamThumbnailURL = twitchStream.getThumbnailUrl(1920, 1080) + "?c=" + CryptoUtils.generateNonce(4);
+		System.err.println(streamThumbnailURL);
+		Duration streamDuration = twitchStream.getUptime();
+		int streamTotalSeconds = (int) streamDuration.getSeconds();
+		
+		final int SECONDS_TO_HOURS = 3600;
+		final int SECONDS_TO_MINUTES = 60;
+		
+		String streamHours = (streamTotalSeconds / SECONDS_TO_HOURS) + "h ";
+		String streamMinutes = (streamTotalSeconds % SECONDS_TO_HOURS) / SECONDS_TO_MINUTES + "m ";
+		String streamSeconds = (streamTotalSeconds % SECONDS_TO_HOURS) % SECONDS_TO_MINUTES + "s ";
+		
+		// only display hours if stream is over an hour long
+		if(streamHours.equalsIgnoreCase("0h ")) {
+			streamHours = "";
+		}
+		
+		String streamUptime = streamHours + streamMinutes + streamSeconds;
+		
+		String streamViewCount = twitchStream.getViewerCount().toString();
+		
+		EmbedBuilder goLiveEmbed = new EmbedBuilder();
+		goLiveEmbed.setTitle(streamTitle, "https://www.twitch.tv/" + ASPECTICOR);
+		goLiveEmbed.setDescription("Playing **" + streamGame + "**");
+		goLiveEmbed.addField(
+				"__Viewers__:",
+				streamViewCount,
+				true);
+		goLiveEmbed.addBlankField(true);
+		goLiveEmbed.addField(
+				"__Uptime__:",
+				streamUptime,
+				true);
+		goLiveEmbed.setImage(streamThumbnailURL);
+		goLiveEmbed.setThumbnail("https://i.imgur.com/dimEDm5.png");
+		goLiveEmbed.setAuthor(
+				"Aspecticor",
+				"https://www.twitch.tv/aspecticor",
+				"https://static-cdn.jtvnw.net/jtv_user_pictures/0dd6cf74-d650-453a-8d18-403409ae5517-profile_image-70x70.png"
+		);
+		goLiveEmbed.setFooter("brought to you by AspectiBot \u2764", "https://i.imgur.com/hAOV52i.png");
+		goLiveEmbed.setColor(0xf92b75);
+		
+		return goLiveEmbed;
+		
+	}
+	
+	
 	public static void loadCredentials() {
 		
 		try {

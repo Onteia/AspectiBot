@@ -1,18 +1,30 @@
 package aspectibot;
 
+import java.awt.Graphics;
+import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
 import java.time.Duration;
+import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
+
+import javax.imageio.ImageIO;
 
 import com.github.philippheuer.credentialmanager.domain.OAuth2Credential;
 import com.github.philippheuer.events4j.core.EventManager;
@@ -28,6 +40,7 @@ import com.github.twitch4j.events.ChannelGoLiveEvent;
 import com.github.twitch4j.events.ChannelGoOfflineEvent;
 import com.github.twitch4j.events.ChannelViewerCountUpdateEvent;
 import com.github.twitch4j.helix.domain.Stream;
+import com.github.twitch4j.helix.domain.Video;
 
 import commands.BrainpowerCommand;
 import commands.EmotesCommand;
@@ -51,6 +64,7 @@ import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.ChunkingFilter;
+import net.dv8tion.jda.api.utils.FileUpload;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 
 public class AspectiBot extends ListenerAdapter {
@@ -63,7 +77,7 @@ public class AspectiBot extends ListenerAdapter {
 	private static String LIVE_ICON_PATH;
 	private static String OFFLINE_ICON_PATH;
 	
-	/* Aspecticord settings */
+	/* Aspecticord settings */ 
 	final public static long SERVER_ID = 864273305330909204L; // Aspecticord Server ID
 	private static long LIVE_CHANNEL_ID = 885705830341697536L; // #aspecticor-is-live channel
 	public static long LOG_CHANNEL_ID = 1016876667509166100L; // #server_logs channel
@@ -180,7 +194,7 @@ public class AspectiBot extends ListenerAdapter {
 		commands.put("!showcom", new LogShowCommand());
 		commands.put("!delcom", new LogDeleteCommand());
 		commands.put("!editcom", new LogEditCommand());
-		
+
 		eventManager.onEvent(ChannelMessageEvent.class, event -> {
 
 			String cmd = event.getMessage().toLowerCase().split(" ")[0];
@@ -219,10 +233,13 @@ public class AspectiBot extends ListenerAdapter {
 				jda.getPresence().setActivity(Activity.watching("Aspecticor's Stream"));
 				
 				EmbedBuilder goLiveEmbed = formatEmbed(event.getStream());	
-				jda.getNewsChannelById(AspectiBot.LIVE_CHANNEL_ID).sendMessage(
-						"<@&"+ PING_ROLE +"> HE'S LIVE!!!"
-				).queue();
-				streamNotificationMessage = jda.getNewsChannelById(AspectiBot.LIVE_CHANNEL_ID).sendMessageEmbeds(goLiveEmbed.build()).complete();
+//				jda.getNewsChannelById(AspectiBot.LIVE_CHANNEL_ID).sendMessage(
+//						"<@&"+ PING_ROLE +"> HE'S LIVE!!!"
+//						);
+				streamNotificationMessage = jda.getNewsChannelById(AspectiBot.LIVE_CHANNEL_ID)
+						.sendMessage("<@&"+ PING_ROLE +"> HE'S LIVE!!!")
+						.addEmbeds(goLiveEmbed.build())
+						.complete();
 				
 				// change icon to Live version
 				jda.getGuildById(SERVER_ID).getManager().setIcon(liveIcon).queue();
@@ -281,10 +298,93 @@ public class AspectiBot extends ListenerAdapter {
 					"Mercs do a WICKED jump", "Aspecticor leak his stream key: " + fakeKey};
 			jda.getPresence().setActivity(Activity.watching(randResponses[r.nextInt(randResponses.length)]));
 			
+			List<Video> vodList = twitchClient.getHelix().getVideos(oAuth, null, aspecticorId, null, null, "day", "time", "archive", null, null, 1).execute().getVideos();
+			Video latestVod = vodList.get(0);
+			
+			try {
+				// credit: https://www.techiedelight.com/download-file-from-url-java/
+				// get a local version of the thumbnail to set up for adding overlay
+				
+				int width = 1920;
+				int height = 1080;
+				
+				URL vodThumbURL = new URL(latestVod.getThumbnailUrl(width, height));
+				InputStream in = vodThumbURL.openStream();
+				Files.copy(in, Paths.get("vod_thumbnail.png"));
+				
+				// credit: https://stackoverflow.com/a/2319251
+				// adds the vod_overlay on top of the vod_thumbnail
+				BufferedImage uploadedThumbnail = ImageIO.read(new File("vod_thumbnail.png"));
+				BufferedImage vodOverlay = ImageIO.read(new File("vod_overlay.png"));
+				
+				BufferedImage combined = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+				Graphics g = combined.getGraphics();
+				g.drawImage(uploadedThumbnail, 0, 0, null);
+				
+				// set offset to center the overlay
+				int x_offset = (uploadedThumbnail.getWidth() - vodOverlay.getWidth()) / 2;
+				int y_offset = (uploadedThumbnail.getHeight() - vodOverlay.getHeight()) / 2;
+				
+				g.drawImage(vodOverlay, x_offset, y_offset, null);
+				g.dispose();
+				// save the image on the system
+				ImageIO.write(combined, "PNG", new File("combined.png"));
+				
+				File combinedImage = new File("combined.png");
+				String streamTitle = latestVod.getTitle();
+				String vodThumbnailURL = "attachment://combined.png";
+				String streamDuration = latestVod.getDuration();
+				String streamViewCount = latestVod.getViewCount().toString();
+				
+				// format date to look like "Wed, Sep 28, 2022"
+				SimpleDateFormat sdf = new SimpleDateFormat("EEE, MMM d, yyyy");
+				Date vodDate = sdf.parse(sdf.format(Date.from(latestVod.getPublishedAtInstant())));
+				String[] dateArray = vodDate.toString().split(" ");
+				String stringDate = dateArray[0] + ", " + dateArray[1] + " " + dateArray[2] + ", " + dateArray[5];
+				
+				EmbedBuilder offlineEmbed = new EmbedBuilder();
+				offlineEmbed.setTitle("**[VOD]** " + streamTitle, latestVod.getUrl());
+				offlineEmbed.setDescription("VOD from " + stringDate);
+				offlineEmbed.addField(
+						"__VOD View Count__:",
+						streamViewCount,
+						true);
+				offlineEmbed.addBlankField(true);
+				offlineEmbed.addField(
+						"__VOD Length__:",
+						streamDuration,
+						true);
+				offlineEmbed.setImage(vodThumbnailURL);
+				offlineEmbed.setThumbnail("https://i.imgur.com/YfplpoR.png");
+				offlineEmbed.setAuthor(
+						"Aspecticor",
+						"https://www.twitch.tv/aspecticor",
+						"https://static-cdn.jtvnw.net/jtv_user_pictures/0dd6cf74-d650-453a-8d18-403409ae5517-profile_image-70x70.png"
+						);
+				offlineEmbed.setFooter(
+						"brought to you by AspectiBot \u2764",
+						"https://i.imgur.com/hAOV52i.png");
+				offlineEmbed.setColor(0x8045f4);
+				
+				Collection<FileUpload> files = new LinkedList<FileUpload>();
+				files.add(FileUpload.fromData(combinedImage, "combined.png"));
+				
+				File vodThumbnail = new File("vod_thumbnail.png");
+				
+				streamNotificationMessage.editMessageEmbeds(offlineEmbed.build()).setFiles(files).complete();
+				
+				vodThumbnail.delete();
+				combinedImage.delete();
+				
+			} catch(Exception e) {
+				e.printStackTrace();
+			}
+			
 			streamNotificationMessage = null;
 			
 			// change icon to Offline version
-			jda.getGuildById(SERVER_ID).getManager().setIcon(offlineIcon).queue();
+			jda.getGuildById(SERVER_ID).getManager().setIcon(offlineIcon).submit();
+			
 		});
 
 	} // end of goOffline method
@@ -320,7 +420,6 @@ public class AspectiBot extends ListenerAdapter {
 		String streamTitle = twitchStream.getTitle();
 		String streamGame = twitchStream.getGameName();
 		String streamThumbnailURL = twitchStream.getThumbnailUrl(1920, 1080) + "?c=" + CryptoUtils.generateNonce(4);
-		System.err.println(streamThumbnailURL);
 		Duration streamDuration = twitchStream.getUptime();
 		int streamTotalSeconds = (int) streamDuration.getSeconds();
 		
@@ -365,8 +464,7 @@ public class AspectiBot extends ListenerAdapter {
 		return goLiveEmbed;
 		
 	}
-	
-	
+		
 	public static void loadCredentials() {
 		
 		try {

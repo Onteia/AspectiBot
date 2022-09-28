@@ -233,9 +233,6 @@ public class AspectiBot extends ListenerAdapter {
 				jda.getPresence().setActivity(Activity.watching("Aspecticor's Stream"));
 				
 				EmbedBuilder goLiveEmbed = formatEmbed(event.getStream());	
-//				jda.getNewsChannelById(AspectiBot.LIVE_CHANNEL_ID).sendMessage(
-//						"<@&"+ PING_ROLE +"> HE'S LIVE!!!"
-//						);
 				streamNotificationMessage = jda.getNewsChannelById(AspectiBot.LIVE_CHANNEL_ID)
 						.sendMessage("<@&"+ PING_ROLE +"> HE'S LIVE!!!")
 						.addEmbeds(goLiveEmbed.build())

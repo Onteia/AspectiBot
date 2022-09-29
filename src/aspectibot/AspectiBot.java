@@ -43,6 +43,7 @@ import com.github.twitch4j.helix.domain.Stream;
 import com.github.twitch4j.helix.domain.Video;
 
 import commands.BrainpowerCommand;
+import commands.ClipCommand;
 import commands.EmotesCommand;
 import commands.LeaderboardCommand;
 import commands.LogAddCommand;
@@ -76,11 +77,13 @@ public class AspectiBot extends ListenerAdapter {
 	private static String TWITCH_TOKEN_PATH;
 	private static String LIVE_ICON_PATH;
 	private static String OFFLINE_ICON_PATH;
+	private static String THIS_FOLDER_PATH;
 	
-	/* Aspecticord settings */ 
+	/* Aspecticord settings */
 	final public static long SERVER_ID = 864273305330909204L; // Aspecticord Server ID
 	private static long LIVE_CHANNEL_ID = 885705830341697536L; // #aspecticor-is-live channel
-	public static long LOG_CHANNEL_ID = 1016876667509166100L; // #server_logs channel
+	public static final long LOG_CHANNEL_ID = 1016876667509166100L; // #server_logs channel
+	public static final long CLIP_CHANNEL_ID = 867258015220236319L;	// #clips channel
 	private long DEFAULT_ROLE = 885698882695229500L; // Aspecticord default role
 	final private static String PING_ROLE = "882772072475017258"; // Aspecticord @TWITCH_PINGS	
 	
@@ -88,6 +91,7 @@ public class AspectiBot extends ListenerAdapter {
 	public static final long SERVER_ID = 264217465305825281L; // SELF Discord server
 	public static final long LIVE_CHANNEL_ID = 1022422500161900634L; // #bot channel
 	public static final long LOG_CHANNEL_ID = 1022427876609495100L; // #bot channel
+	public static final long CLIP_CHANNEL_ID = 1024597131488665601L; // #clips channel
 	public static final long DEFAULT_ROLE = 963139708655919145L;
 	 */
 
@@ -105,6 +109,7 @@ public class AspectiBot extends ListenerAdapter {
 	
 	public static String aspecticorId;
 	public static TwitchClient twitchClient;
+	public static JDA jda;
 	public static Message streamNotificationMessage = null;
 
 	private static Random r = new Random();
@@ -127,13 +132,14 @@ public class AspectiBot extends ListenerAdapter {
 			TWITCH_TOKEN_PATH = "/home/orangepi/jars/persistent/twitchOAuth.txt";
 			LIVE_ICON_PATH = "/home/orangepi/jars/persistent/Aspecticor_Live.png";
 			OFFLINE_ICON_PATH = "/home/orangepi/jars/persistent/Aspecticor_Offline.png";
+			THIS_FOLDER_PATH = "/home/orangepi/jars/AspectiBot/";
 		} finally {
 			//load credentials
 			loadCredentials();
 		}
 		
 		// set up JDA
-		JDA jda = JDABuilder.createDefault(token)
+		jda = JDABuilder.createDefault(token)
 				.setChunkingFilter(ChunkingFilter.ALL)
 				.setMemberCachePolicy(MemberCachePolicy.ALL)
 				.enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.MESSAGE_CONTENT)
@@ -155,7 +161,7 @@ public class AspectiBot extends ListenerAdapter {
 		// join Aspecticor's chat
 		OAuth2Credential credential = new OAuth2Credential("twitch", oAuth);
 
-		TwitchClient twitchClient = TwitchClientBuilder.builder()
+		twitchClient = TwitchClientBuilder.builder()
 				.withEnableHelix(true)
 				.withDefaultAuthToken(credential)
 				.withEventManager(eventManager)
@@ -164,6 +170,7 @@ public class AspectiBot extends ListenerAdapter {
 				.withChatAccount(credential)
 				.withEnablePubSub(true)
 				.withEnableTMI(true)
+				.withEnableGraphQL(true)
 				.build();
 
 		// join Aspect's stream
@@ -194,6 +201,7 @@ public class AspectiBot extends ListenerAdapter {
 		commands.put("!showcom", new LogShowCommand());
 		commands.put("!delcom", new LogDeleteCommand());
 		commands.put("!editcom", new LogEditCommand());
+		commands.put("!clip", new ClipCommand());
 
 		eventManager.onEvent(ChannelMessageEvent.class, event -> {
 
@@ -307,12 +315,12 @@ public class AspectiBot extends ListenerAdapter {
 				
 				URL vodThumbURL = new URL(latestVod.getThumbnailUrl(width, height));
 				InputStream in = vodThumbURL.openStream();
-				Files.copy(in, Paths.get("vod_thumbnail.png"));
+				Files.copy(in, Paths.get(THIS_FOLDER_PATH + "vod_thumbnail.png"));
 				
 				// credit: https://stackoverflow.com/a/2319251
 				// adds the vod_overlay on top of the vod_thumbnail
-				BufferedImage uploadedThumbnail = ImageIO.read(new File("vod_thumbnail.png"));
-				BufferedImage vodOverlay = ImageIO.read(new File("vod_overlay.png"));
+				BufferedImage uploadedThumbnail = ImageIO.read(new File(THIS_FOLDER_PATH + "vod_thumbnail.png"));
+				BufferedImage vodOverlay = ImageIO.read(new File(THIS_FOLDER_PATH + "vod_overlay.png"));
 				
 				BufferedImage combined = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 				Graphics g = combined.getGraphics();
@@ -325,9 +333,9 @@ public class AspectiBot extends ListenerAdapter {
 				g.drawImage(vodOverlay, x_offset, y_offset, null);
 				g.dispose();
 				// save the image on the system
-				ImageIO.write(combined, "PNG", new File("combined.png"));
+				ImageIO.write(combined, "PNG", new File(THIS_FOLDER_PATH + "combined.png"));
 				
-				File combinedImage = new File("combined.png");
+				File combinedImage = new File(THIS_FOLDER_PATH + "combined.png");
 				String streamTitle = latestVod.getTitle();
 				String vodThumbnailURL = "attachment://combined.png";
 				String streamDuration = latestVod.getDuration();
@@ -366,7 +374,7 @@ public class AspectiBot extends ListenerAdapter {
 				Collection<FileUpload> files = new LinkedList<FileUpload>();
 				files.add(FileUpload.fromData(combinedImage, "combined.png"));
 				
-				File vodThumbnail = new File("vod_thumbnail.png");
+				File vodThumbnail = new File(THIS_FOLDER_PATH + "vod_thumbnail.png");
 				
 				streamNotificationMessage.editMessageEmbeds(offlineEmbed.build()).setFiles(files).complete();
 				

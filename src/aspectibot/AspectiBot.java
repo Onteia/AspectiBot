@@ -126,6 +126,7 @@ public class AspectiBot extends ListenerAdapter {
 			TWITCH_TOKEN_PATH = prop.getProperty("TWITCH_TOKEN_PATH");
 			LIVE_ICON_PATH = prop.getProperty("LIVE_ICON_PATH");
 			OFFLINE_ICON_PATH = prop.getProperty("OFFLINE_ICON_PATH");
+			THIS_FOLDER_PATH = prop.getProperty("THIS_FOLDER_PATH");
 		} catch (FileNotFoundException e) {
 			//no config file
 			DISCORD_TOKEN_PATH = "/home/orangepi/jars/persistent/discordToken.txt";

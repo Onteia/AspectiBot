@@ -52,6 +52,7 @@ import commands.LogEditCommand;
 import commands.LogShowCommand;
 import commands.LurkCommand;
 import commands.PbCommand;
+import commands.TwitchEmoteCommand;
 import commands.TwitterCommand;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
@@ -112,7 +113,7 @@ public class AspectiBot extends ListenerAdapter {
 	public static JDA jda;
 	public static Message streamNotificationMessage = null;
 
-	private static Random r = new Random();
+	public static final Random R = new Random();
 
 	public static void main(String[] args) throws Exception {
 
@@ -203,6 +204,7 @@ public class AspectiBot extends ListenerAdapter {
 		commands.put("!delcom", new LogDeleteCommand());
 		commands.put("!editcom", new LogEditCommand());
 		commands.put("!clip", new ClipCommand());
+		commands.put("!twitchemote", new TwitchEmoteCommand());
 
 		eventManager.onEvent(ChannelMessageEvent.class, event -> {
 
@@ -280,11 +282,11 @@ public class AspectiBot extends ListenerAdapter {
 			//credit: https://whaa.dev/how-to-generate-random-characters-in-java
 			StringBuilder randomKey = new StringBuilder();
 			for(int i = 0; i < 30; i++) {
-				char randomCharacter = (char)((r.nextBoolean() ? 'a' : 'A') + r.nextInt(26));
+				char randomCharacter = (char)((R.nextBoolean() ? 'a' : 'A') + R.nextInt(26));
 				randomKey.append(randomCharacter);
 			}
 			
-			String fakeKey = "live_" + r.nextInt(1000000000) + "_" + randomKey.toString();
+			String fakeKey = "live_" + R.nextInt(1000000000) + "_" + randomKey.toString();
 			String[] randResponses = {"Aspecticor's VODS", "Aspecticor's Clips",
 					"Aspecticor's YT Videos", "Aspecticor's TikToks", 
 					"Aspecticor get cancelled on Twitter",
@@ -302,7 +304,7 @@ public class AspectiBot extends ListenerAdapter {
 					"Soylent Splive believe in yet another conspiracy theory",
 					"Aspecticor watch 'cutscenes'", "Mercs assault the top of Aspecticor's chair", 
 					"Mercs do a WICKED jump", "Aspecticor leak his stream key: " + fakeKey};
-			jda.getPresence().setActivity(Activity.watching(randResponses[r.nextInt(randResponses.length)]));
+			jda.getPresence().setActivity(Activity.watching(randResponses[R.nextInt(randResponses.length)]));
 			
 			List<Video> vodList = twitchClient.getHelix().getVideos(oAuth, null, aspecticorId, null, null, "day", "time", "archive", null, null, 1).execute().getVideos();
 			Video latestVod = vodList.get(0);

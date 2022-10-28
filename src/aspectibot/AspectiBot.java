@@ -26,6 +26,8 @@ import java.util.Random;
 
 import javax.imageio.ImageIO;
 
+import org.slf4j.LoggerFactory;
+
 import com.github.philippheuer.credentialmanager.domain.OAuth2Credential;
 import com.github.philippheuer.events4j.core.EventManager;
 import com.github.philippheuer.events4j.simple.SimpleEventHandler;
@@ -42,6 +44,8 @@ import com.github.twitch4j.events.ChannelViewerCountUpdateEvent;
 import com.github.twitch4j.helix.domain.Stream;
 import com.github.twitch4j.helix.domain.Video;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
 import commands.BrainpowerCommand;
 import commands.ClipCommand;
 import commands.EmotesCommand;
@@ -139,6 +143,11 @@ public class AspectiBot extends ListenerAdapter {
 			//load credentials
 			loadCredentials();
 		}
+
+		// Logger logger = (Logger) LoggerFactory.getLogger(ASPECTICOR);
+		// logger.setLevel(Level.INFO);
+		Class c = AspectiBot.class;
+		System.out.println(c.getName());
 		
 		// set up JDA
 		jda = JDABuilder.createDefault(token)
@@ -413,9 +422,10 @@ public class AspectiBot extends ListenerAdapter {
 				System.err.println(sw.toString());
 			} finally {
 				System.out.println(" " + mods);
-				if (mods.contains(event.getUser().getName())) {
+				System.out.println(mods != null);
+				if (mods != null && mods.contains(event.getUser().getName())) {
 
-					twitchClient.getChat().sendMessage(ASPECTICOR, event.getMessage());
+					System.out.println(twitchClient.getChat().sendMessage(ASPECTICOR, event.getMessage()));
 
 				}
 			}

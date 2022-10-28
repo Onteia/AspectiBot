@@ -31,10 +31,10 @@ LIVE_ICON_PATH=C:\\Users\\pokem\\OneDrive\\Pictures\\Flags\\Atlae.png
 OFFLINE_ICON_PATH=C:\\Users\\pokem\\OneDrive\\Pictures\\Flags\\AtlaeNightLight.png
 DISCORD_TOKEN_PATH=C:\\Users\\pokem\\Documents\\GitHub\\AspectiBot\\discordToken.txt
 TWITCH_TOKEN_PATH=C:\\Users\\pokem\\Documents\\GitHub\\AspectiBot\\twitchOAuth.txt
-THIS_FOLDER_PATH=C:\\Users\\pokem\\Documents\\GitHub\\Aspectibot\\
+THIS_FOLDER_PATH=C:\\Users\\pokem\\Documents\\GitHub\\AspectiBot\\
 ```
 
-- Install [Maven](https://maven.apache.org/guides/getting-started/maven-in-five-minutes.html), the tool we use to build this Java project. Use `mvn clean` and `mvn compile` as you see fit. Once you are ready to run, export the project as a JAR file and run `java -jar AspectiBot.jar`.
+- Install [Maven](https://maven.apache.org/guides/getting-started/maven-in-five-minutes.html), the tool we use to build this Java project. Use `mvn clean` and `mvn compile` as you see fit. Once you are ready to run, export the project as a JAR file or run `mvn assemble:single` and run `java -jar [JAR FILE]`.
 
 ## Style
 

@@ -2,7 +2,7 @@
 
 <configuration scan="true">
     <!-- Configure Twitch4J logger level -->
-    <logger name="com.github.twitch4j" level="INFO"/>
+    <logger name="com.github.twitch4j" level="DEBUG"/>
 
     <!-- Appender Configuration [Console] -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">

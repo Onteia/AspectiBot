@@ -35,6 +35,13 @@
 	<dependencies>
 
 		<dependency>
+			<groupId>com.theokanning.openai-gpt3-java</groupId>
+			<artifactId>client</artifactId>
+			<version>0.8.1</version>
+		</dependency>
+
+
+		<dependency>
     		<groupId>net.dv8tion</groupId>
     		<artifactId>JDA</artifactId>
     		<version>5.0.0-alpha.19</version> 

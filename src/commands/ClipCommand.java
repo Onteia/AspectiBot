@@ -22,29 +22,38 @@ public class ClipCommand implements TwitchCommand {
 		}
 		
 		// credit: https://twitch4j.github.io/rest-helix/clips-create
+		CreateClipList clipData = AspectiBot.twitchClient.getHelix()
+											.createClip(AspectiBot.oAuth, 
+														AspectiBot.aspecticorId,
+														false)
+											.execute();
 		
-		//CreateClipList clipData = AspectiBot.twitchClient.getHelix().createClip(AspectiBot.oAuth, AspectiBot.aspecticorId, false);
-		
-		//String clipId = clipData.getData().get(0).getId();
+		String clipId = clipData.getData().get(0).getId();
 		
 		
 		
-	    AspectiBot.twitchClient.getGraphQL();
+	    AspectiBot.twitchClient.getGraphQL()
+								.updateClip(null, clipId, clipName);
 
-	    
+		System.out.println();
+		System.out.println();
+	    System.out.println(clipData.getData().get(0).getEditUrl());
+	    System.out.println(clipData.getData().get(0).toString());
+		System.out.println();
+		System.out.println();
 		
 		
 		
-		//String clipURL = "https://clips.twitch.tv/" + clipId;
+		String clipURL = "https://clips.twitch.tv/" + clipId;
 		
 		
 		
 		// send a message in the discord of the clip
-		//AspectiBot.jda.getGuildById(AspectiBot.SERVER_ID).getTextChannelById(AspectiBot.CLIP_CHANNEL_ID).sendMessage(clipURL).submit();
+		AspectiBot.jda.getGuildById(AspectiBot.SERVER_ID).getTextChannelById(AspectiBot.CLIP_CHANNEL_ID).sendMessage(clipURL).submit();
 		
 		// send a message in Twitch Chat that the clip was made
-		//return "here's your clip: " + clipURL;
-		return "";
+		return "here's your clip: " + clipURL;
+		// return "";
 	}
 	
 }

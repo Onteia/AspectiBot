@@ -9,6 +9,7 @@ Thank you for your interest in contributing to this project! It is an entirely v
   - [Code of Conduct](#code-of-conduct)
   - [How to Build and Test](#how-to-build-and-test)
   - [Style](#style)
+  - [Dependencies](#dependencies)
 
 ## Code of Conduct
 
@@ -24,6 +25,8 @@ Read the Code of Conduct [here](CODE_OF_CONDUCT.md). Please be respectful and ex
 
 - Create your own Twitch bot. First, create a new account on Twitch. You can then generate an OAuth access token via third-party sites like <https://twitchtokengenerator.com> by selecting desired scopes and clicking "Generate Token!" As far as we can tell, you can add all scopes, and it doesn't break. Similar with the Discord token, you should keep this token private and copy this into a file somewhere.
 
+- Create an [OpenAI account](https://chat.openai.com/auth/login). Once you do so, generate an [API key](https://beta.openai.com/account/api-keys). As always, keep this token secret and copy this into a file.
+
 - Create a config file. By default, we have this set to `src/config.properties`, but you can change this to any file if you change the `CONFIG_FILE` variable in `AspectiBot.java`. In this config file, place the path strings of your files containing the tokens as an escaped URI string. Do the same for two test images that will be the live and offline server icons. An example config file is shown below.
 
 ```properties
@@ -31,6 +34,7 @@ LIVE_ICON_PATH=C:\\Users\\pokem\\OneDrive\\Pictures\\Flags\\Atlae.png
 OFFLINE_ICON_PATH=C:\\Users\\pokem\\OneDrive\\Pictures\\Flags\\AtlaeNightLight.png
 DISCORD_TOKEN_PATH=C:\\Users\\pokem\\Documents\\GitHub\\AspectiBot\\discordToken.txt
 TWITCH_TOKEN_PATH=C:\\Users\\pokem\\Documents\\GitHub\\AspectiBot\\twitchOAuth.txt
+OPEN_AI_TOKEN_PATH=C:\\Users\\pokem\\Documents\\GitHub\\AspectiBot\\openAiToken.txt
 THIS_FOLDER_PATH=C:\\Users\\pokem\\Documents\\GitHub\\AspectiBot\\
 ```
 
@@ -39,3 +43,10 @@ THIS_FOLDER_PATH=C:\\Users\\pokem\\Documents\\GitHub\\AspectiBot\\
 ## Style
 
 We're not terribly picky. Consult [existing Java style guides](https://google.github.io/styleguide/javaguide.html) liberally and keep unconventional code styling to a minimum.
+
+## Dependencies
+
+- [qos-ch/logback](https://github.com/qos-ch/logback)
+- [twitch4j/twitch4j](https://github.com/twitch4j/twitch4j)
+- [DV8FromTheWorld/JDA](https://github.com/DV8FromTheWorld/JDA)
+- [TheoKanning/openai-java](https://github.com/TheoKanning/openai-java)

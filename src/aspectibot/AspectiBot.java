@@ -46,6 +46,7 @@ import com.github.twitch4j.helix.domain.Video;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
+import commands.ArtificialIntelligenceCommand;
 import commands.BrainpowerCommand;
 import commands.ClipCommand;
 import commands.EmotesCommand;
@@ -80,6 +81,7 @@ public class AspectiBot extends ListenerAdapter {
 
 	private static String DISCORD_TOKEN_PATH;
 	private static String TWITCH_TOKEN_PATH;
+	private static String OPEN_AI_TOKEN_PATH;
 	private static String LIVE_ICON_PATH;
 	private static String OFFLINE_ICON_PATH;
 	private static String THIS_FOLDER_PATH;
@@ -92,16 +94,18 @@ public class AspectiBot extends ListenerAdapter {
 	private long DEFAULT_ROLE = 885698882695229500L; // Aspecticord default role
 	final private static String PING_ROLE = "882772072475017258"; // Aspecticord @TWITCH_PINGS	
 	
-	 /*
-	public static final long SERVER_ID = 264217465305825281L; // SELF Discord server
-	public static final long LIVE_CHANNEL_ID = 1022422500161900634L; // #bot channel
-	public static final long LOG_CHANNEL_ID = 1022427876609495100L; // #bot channel
-	public static final long CLIP_CHANNEL_ID = 1024597131488665601L; // #clips channel
-	public static final long DEFAULT_ROLE = 963139708655919145L;
+	/*
+	public static final long SERVER_ID = 323163248784310282L; // SELF Discord server
+	public static final long LIVE_CHANNEL_ID = 853921144770789397L; // #bot channel
+	public static final long LOG_CHANNEL_ID = 853921144770789397L; // #bot channel
+	public static final long CLIP_CHANNEL_ID = 853921144770789397L; // #clips channel
+	public static final long DEFAULT_ROLE = 853934165077393458L;
+	public static final String PING_ROLE = "853934165077393458";
 	 */
 
 	private static String token; // discord token
 	public static String oAuth; // twitch OAuth
+	public static String opnAI; // OpenAI token
 	public static Icon liveIcon;
 	public static Icon offlineIcon;
 	
@@ -129,6 +133,7 @@ public class AspectiBot extends ListenerAdapter {
 			prop.load(config);
 			DISCORD_TOKEN_PATH = prop.getProperty("DISCORD_TOKEN_PATH");
 			TWITCH_TOKEN_PATH = prop.getProperty("TWITCH_TOKEN_PATH");
+			OPEN_AI_TOKEN_PATH = prop.getProperty("OPEN_AI_TOKEN_PATH");
 			LIVE_ICON_PATH = prop.getProperty("LIVE_ICON_PATH");
 			OFFLINE_ICON_PATH = prop.getProperty("OFFLINE_ICON_PATH");
 			THIS_FOLDER_PATH = prop.getProperty("THIS_FOLDER_PATH");
@@ -136,6 +141,7 @@ public class AspectiBot extends ListenerAdapter {
 			//no config file
 			DISCORD_TOKEN_PATH = "/home/orangepi/jars/persistent/discordToken.txt";
 			TWITCH_TOKEN_PATH = "/home/orangepi/jars/persistent/twitchOAuth.txt";
+			OPEN_AI_TOKEN_PATH = "/home/orangepi/jars/persistent/openAiToken.txt";
 			LIVE_ICON_PATH = "/home/orangepi/jars/persistent/Aspecticor_Live.png";
 			OFFLINE_ICON_PATH = "/home/orangepi/jars/persistent/Aspecticor_Offline.png";
 			THIS_FOLDER_PATH = "/home/orangepi/jars/AspectiBot/";
@@ -206,7 +212,6 @@ public class AspectiBot extends ListenerAdapter {
 		commands.put("!emotes", new EmotesCommand());
 		commands.put("!leaderboards", new LeaderboardCommand());
 		commands.put("!lurk", new LurkCommand());
-		commands.put("!pb", new PbCommand());
 		commands.put("!twitter", new TwitterCommand());
 		commands.put("!addcom", new LogAddCommand());
 		commands.put("!showcom", new LogShowCommand());
@@ -214,6 +219,7 @@ public class AspectiBot extends ListenerAdapter {
 		commands.put("!editcom", new LogEditCommand());
 		commands.put("!clip", new ClipCommand());
 		commands.put("!twitchemote", new TwitchEmoteCommand());
+		commands.put("!ai", new ArtificialIntelligenceCommand());
 
 		eventManager.onEvent(ChannelMessageEvent.class, event -> {
 
@@ -490,15 +496,18 @@ public class AspectiBot extends ListenerAdapter {
 			// get the files
 			File discordToken = new File(DISCORD_TOKEN_PATH);
 			File twitchToken = new File(TWITCH_TOKEN_PATH);
+			File openAiToken = new File(OPEN_AI_TOKEN_PATH);
 			
 			// read the files
 			// https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html
 			try (
 				BufferedReader br1 = new BufferedReader(new FileReader(discordToken));
 				BufferedReader br2 = new BufferedReader(new FileReader(twitchToken));
+				BufferedReader br3 = new BufferedReader(new FileReader(openAiToken));
 			) {
 				token = br1.readLine();
 				oAuth = br2.readLine();
+				opnAI = br3.readLine();
 			}
 		} catch (Exception e) {
 

@@ -6,6 +6,7 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
@@ -18,6 +19,10 @@ public class DiscordServerListener extends ListenerAdapter {
 	public void onMessageReceived(MessageReceivedEvent event) {
 		Message message = event.getMessage();
 		Member m = event.getMember();
+		if(m == null) {
+            System.err.println("Member is null!");
+            return;
+        }
 		GuildChannel channel;
 		
 		if(event.getChannelType().isAudio()) {
@@ -67,7 +72,10 @@ public class DiscordServerListener extends ListenerAdapter {
 			}
 			
 			logMessage.setColor(0xf705ff);
-			guild.getTextChannelById(AspectiBot.LOG_CHANNEL_ID).sendMessageEmbeds(logMessage.build()).complete();
+			TextChannel logChannel = guild.getTextChannelById(AspectiBot.LOG_CHANNEL_ID);
+			if(logChannel != null) {
+			    logChannel.sendMessageEmbeds(logMessage.build()).complete();
+			}
 			logMessage.clear();
 		
 		}
@@ -78,8 +86,11 @@ public class DiscordServerListener extends ListenerAdapter {
 	public void onMessageUpdate(MessageUpdateEvent event) {
 		
 		Message message = event.getMessage();
-		
 		Member m = event.getMember();
+		if(m == null) {
+		    System.err.println("Member is null!");
+		    return;
+		}
 		GuildChannel channel;
 		
 		if(event.getChannelType().isAudio()) {
@@ -123,10 +134,12 @@ public class DiscordServerListener extends ListenerAdapter {
 			}
 			
 			logMessage.setColor(0xf705ff);
-			guild.getTextChannelById(AspectiBot.LOG_CHANNEL_ID).sendMessageEmbeds(logMessage.build()).complete();
+			
+			TextChannel logChannel = guild.getTextChannelById(AspectiBot.LOG_CHANNEL_ID);
+			if(logChannel != null) {
+			    logChannel.sendMessageEmbeds(logMessage.build()).complete();
+			}
 			logMessage.clear();
-		
-		
 		
 		}
 	}

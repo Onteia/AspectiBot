@@ -26,8 +26,6 @@ import java.util.Random;
 
 import javax.imageio.ImageIO;
 
-import org.slf4j.LoggerFactory;
-
 import com.github.philippheuer.credentialmanager.domain.OAuth2Credential;
 import com.github.philippheuer.events4j.core.EventManager;
 import com.github.philippheuer.events4j.simple.SimpleEventHandler;
@@ -44,11 +42,8 @@ import com.github.twitch4j.events.ChannelViewerCountUpdateEvent;
 import com.github.twitch4j.helix.domain.Stream;
 import com.github.twitch4j.helix.domain.Video;
 
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
 import commands.ArtificialIntelligenceCommand;
 import commands.BrainpowerCommand;
-import commands.ClipCommand;
 import commands.EmotesCommand;
 import commands.LeaderboardCommand;
 import commands.LogAddCommand;
@@ -56,7 +51,6 @@ import commands.LogDeleteCommand;
 import commands.LogEditCommand;
 import commands.LogShowCommand;
 import commands.LurkCommand;
-import commands.PbCommand;
 import commands.TwitchEmoteCommand;
 import commands.TwitterCommand;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -64,9 +58,12 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Activity;
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Icon;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.channel.concrete.NewsChannel;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.GatewayIntent;
@@ -76,7 +73,7 @@ import net.dv8tion.jda.api.utils.MemberCachePolicy;
 
 public class AspectiBot extends ListenerAdapter {
 	
-	private static final String ASPECTICOR = "aspecticor";
+	private static final String ASPECTICOR = "onteia";
 	private static final String CONFIG_FILE = "src/config.properties";
 
 	private static String DISCORD_TOKEN_PATH;
@@ -87,12 +84,12 @@ public class AspectiBot extends ListenerAdapter {
 	private static String THIS_FOLDER_PATH;
 	
 	/* Aspecticord settings */
-	final public static long SERVER_ID = 864273305330909204L; // Aspecticord Server ID
-	private static long LIVE_CHANNEL_ID = 885705830341697536L; // #aspecticor-is-live channel
+	public static final long SERVER_ID = 864273305330909204L; // Aspecticord Server ID
+	private static final long LIVE_CHANNEL_ID = 885705830341697536L; // #aspecticor-is-live channel
 	public static final long LOG_CHANNEL_ID = 1016876667509166100L; // #server_logs channel
 	public static final long CLIP_CHANNEL_ID = 867258015220236319L;	// #clips channel
-	private long DEFAULT_ROLE = 885698882695229500L; // Aspecticord default role
-	final private static String PING_ROLE = "882772072475017258"; // Aspecticord @TWITCH_PINGS	
+	private static final long DEFAULT_ROLE = 885698882695229500L; // Aspecticord default role
+	private static final String PING_ROLE = "882772072475017258"; // Aspecticord @TWITCH_PINGS	
 	
 	/*
 	public static final long SERVER_ID = 323163248784310282L; // SELF Discord server
@@ -108,6 +105,7 @@ public class AspectiBot extends ListenerAdapter {
 	public static String opnAI; // OpenAI token
 	public static Icon liveIcon;
 	public static Icon offlineIcon;
+	public static Guild aspecticord;
 	
 	public enum StreamStatus {
 		LIVE,
@@ -152,8 +150,8 @@ public class AspectiBot extends ListenerAdapter {
 
 		// Logger logger = (Logger) LoggerFactory.getLogger(ASPECTICOR);
 		// logger.setLevel(Level.INFO);
-		Class c = AspectiBot.class;
-		System.out.println(c.getName());
+        //Class<AspectiBot> c = AspectiBot.class;
+		//System.out.println(c.getName());
 		
 		// set up JDA
 		jda = JDABuilder.createDefault(token)
@@ -164,6 +162,15 @@ public class AspectiBot extends ListenerAdapter {
 		jda.getPresence().setStatus(OnlineStatus.IDLE);	
 		jda.addEventListener(new DiscordServerListener());
 
+		// get the Discord server
+		aspecticord = jda.getGuildById(SERVER_ID);
+		// if the Discord server returns invalid, send error message
+		// and exit the program
+//		if(aspecticord == null) {
+//		    System.err.println("Server ID not configured or invalid!");
+//		    System.exit(1);
+//		}
+		
 		// load offline and live icons
 		File liveFile = new File(LIVE_ICON_PATH); 
 		File offlineFile = new File(OFFLINE_ICON_PATH);
@@ -217,7 +224,7 @@ public class AspectiBot extends ListenerAdapter {
 		commands.put("!showcom", new LogShowCommand());
 		commands.put("!delcom", new LogDeleteCommand());
 		commands.put("!editcom", new LogEditCommand());
-		commands.put("!clip", new ClipCommand());
+		//commands.put("!clip", new ClipCommand());
 		commands.put("!twitchemote", new TwitchEmoteCommand());
 		commands.put("!ai", new ArtificialIntelligenceCommand());
 
@@ -246,7 +253,13 @@ public class AspectiBot extends ListenerAdapter {
 		// get the member who joined
 		Member member = event.getMember();
 		// give member who joined the default role
-		event.getJDA().getGuildById(SERVER_ID).addRoleToMember(member, event.getJDA().getRoleById(DEFAULT_ROLE)).queue();
+		
+		Role defaultRole = event.getJDA().getRoleById(DEFAULT_ROLE);
+		if(defaultRole != null) {
+		    event.getMember().getGuild().addRoleToMember(member, defaultRole).queue();
+		} else {
+		    System.err.println("Default role not configured or invalid!");
+		}
 
 	} // end of onGuildMemberJoin method
 
@@ -258,16 +271,19 @@ public class AspectiBot extends ListenerAdapter {
 				jda.getPresence().setStatus(OnlineStatus.ONLINE);
 				jda.getPresence().setActivity(Activity.watching("Aspecticor's Stream"));
 				
-				EmbedBuilder goLiveEmbed = formatEmbed(event.getStream());	
-				streamNotificationMessage = jda.getNewsChannelById(AspectiBot.LIVE_CHANNEL_ID)
-						.sendMessage("<@&"+ PING_ROLE +"> HE'S LIVE!!!")
-						.addEmbeds(goLiveEmbed.build())
-						.complete();
+				EmbedBuilder goLiveEmbed = formatEmbed(event.getStream());
 				
-				// change icon to Live version
-				jda.getGuildById(SERVER_ID).getManager().setIcon(liveIcon).queue();
+			    streamNotificationMessage = jda.getNewsChannelById(AspectiBot.LIVE_CHANNEL_ID)
+			            .sendMessage("<@&"+ PING_ROLE +"> HE'S LIVE!!!")
+			            .addEmbeds(goLiveEmbed.build())
+			            .complete();
+				
+			    // change icon to Live version
+			    aspecticord.getManager().setIcon(liveIcon).queue();
+				} else {
+				    System.err.println("Live-message Channel not configured or invalid!");
+				}
 
-			}
 		});
 		// Update stream info when title is changed
 		eventManager.onEvent(ChannelChangeTitleEvent.class, event -> {
@@ -288,7 +304,7 @@ public class AspectiBot extends ListenerAdapter {
 
 	}
 
-	public static void goOffline(EventManager eventManager, TwitchClient twitchClient, JDA jda) {
+    public static void goOffline(EventManager eventManager, TwitchClient twitchClient, JDA jda) {
 
 		eventManager.onEvent(ChannelGoOfflineEvent.class, event -> {
 			streamStatus = StreamStatus.OFFLINE;
@@ -319,7 +335,11 @@ public class AspectiBot extends ListenerAdapter {
 					"Soylent Splive believe in yet another conspiracy theory",
 					"Aspecticor watch 'cutscenes'", "Mercs assault the top of Aspecticor's chair", 
 					"Mercs do a WICKED jump", "Aspecticor leak his stream key: " + fakeKey};
-			jda.getPresence().setActivity(Activity.watching(randResponses[R.nextInt(randResponses.length)]));
+			String response = randResponses[R.nextInt(randResponses.length)];
+			// null safety
+			if(response != null) {
+			    jda.getPresence().setActivity(Activity.watching(response));
+			}
 			
 			List<Video> vodList = twitchClient.getHelix().getVideos(oAuth, null, aspecticorId, null, null, "day", "time", "archive", null, null, 1).execute().getVideos();
 			Video latestVod = vodList.get(0);
@@ -357,7 +377,9 @@ public class AspectiBot extends ListenerAdapter {
 				String streamTitle = latestVod.getTitle();
 				String vodThumbnailURL = "attachment://combined.png";
 				String streamDuration = latestVod.getDuration();
+				if(streamDuration == null) streamDuration = "0";
 				String streamViewCount = latestVod.getViewCount().toString();
+				if(streamViewCount == null) streamViewCount = "0";
 				
 				// format date to look like "Wed, Sep 28, 2022"
 				SimpleDateFormat sdf = new SimpleDateFormat("EEE, MMM d, yyyy");
@@ -406,7 +428,7 @@ public class AspectiBot extends ListenerAdapter {
 			streamNotificationMessage = null;
 			
 			// change icon to Offline version
-			jda.getGuildById(SERVER_ID).getManager().setIcon(offlineIcon).submit();
+			aspecticord.getManager().setIcon(offlineIcon).submit();
 			
 		});
 
@@ -462,6 +484,7 @@ public class AspectiBot extends ListenerAdapter {
 		String streamUptime = streamHours + streamMinutes + streamSeconds;
 		
 		String streamViewCount = twitchStream.getViewerCount().toString();
+		if(streamViewCount == null) streamViewCount = "0";
 		
 		EmbedBuilder goLiveEmbed = new EmbedBuilder();
 		goLiveEmbed.setTitle(streamTitle, "https://www.twitch.tv/" + ASPECTICOR);

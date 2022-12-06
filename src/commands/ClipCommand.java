@@ -1,13 +1,11 @@
 package commands;
 
-import com.github.philippheuer.credentialmanager.domain.OAuth2Credential;
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
-import com.github.twitch4j.graphql.TwitchGraphQL;
-import com.github.twitch4j.graphql.TwitchGraphQLBuilder;
 import com.github.twitch4j.helix.domain.CreateClipList;
 
 import aspectibot.AspectiBot;
 import aspectibot.TwitchCommand;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 
 public class ClipCommand implements TwitchCommand {
 
@@ -49,7 +47,12 @@ public class ClipCommand implements TwitchCommand {
 		
 		
 		// send a message in the discord of the clip
-		AspectiBot.jda.getGuildById(AspectiBot.SERVER_ID).getTextChannelById(AspectiBot.CLIP_CHANNEL_ID).sendMessage(clipURL).submit();
+		TextChannel clipChannel = AspectiBot.aspecticord.getTextChannelById(AspectiBot.CLIP_CHANNEL_ID);
+		if(clipChannel != null) {
+		    clipChannel.sendMessage(clipURL).submit();
+		} else {
+		    System.err.println("Clip Channel ID not configured or invalid");
+		}
 		
 		// send a message in Twitch Chat that the clip was made
 		return "here's your clip: " + clipURL;

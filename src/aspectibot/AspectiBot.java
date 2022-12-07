@@ -73,7 +73,7 @@ import net.dv8tion.jda.api.utils.MemberCachePolicy;
 
 public class AspectiBot extends ListenerAdapter {
 	
-	private static final String ASPECTICOR = "onteia";
+	private static final String ASPECTICOR = "aspecticor";
 	private static final String CONFIG_FILE = "src/config.properties";
 
 	private static String DISCORD_TOKEN_PATH;

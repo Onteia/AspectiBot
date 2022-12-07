@@ -24,7 +24,7 @@ public class ArtificialIntelligenceCommand implements TwitchCommand {
                 .build();
         List<CompletionChoice> choices = service.createCompletion(completionRequest).getChoices();
         String answer = choices.get(AspectiBot.R.nextInt(choices.size())).getText();
-        return answer.length() < 490 ? answer : answer.substring(0, 490) + "...";
+	return answer.length() < 490 ? answer : answer.substring(0, 490) + "...";
     }
     
 }

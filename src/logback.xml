@@ -7,7 +7,7 @@
     <!-- Appender Configuration [Console] -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>%d{d MMM yy - HH:mm:ss} [%level] [%thread] %logger{0} - %msg%n</pattern>
+            <pattern>[%level] [%thread] %logger{0} - %msg%n</pattern>
         </encoder>
     </appender>
 

@@ -1,6 +1,6 @@
 # aspectibot
 
-AspectiBot: the open-source Discord and Twitch bot for Aspecticor (<https://www.twitch.tv/aspecticor>) maintained by Aspecticor's mods and community, mainly [Onteia](https://www.github.com/yeyroy) *(she/her)* and [Atlae](https://www.github.com/Atlae) *(he/him)*.
+AspectiBot: the open-source Discord and Twitch bot for Aspecticor (<https://www.twitch.tv/aspecticor>) maintained by Aspecticor's mods and community, mainly [Onteia](https://www.github.com/onteia) *(she/her)* and [Atlae](https://www.github.com/Atlae) *(he/him)*.
 
 AspectiBot is written entirely in Java (yeah, yeah, we know) and uses the libraries [Twitch4J](https://github.com/twitch4j/twitch4j) to interface with Twitch, [JDA](https://github.com/DV8FromTheWorld/JDA) to interface with Discord, and [openai-java](https://github.com/TheoKanning/openai-java) to interface with OpenAI.
 

@@ -3,3 +3,4 @@ src/config.properties
 .vscode/
 target/
 client.log
+*.jar

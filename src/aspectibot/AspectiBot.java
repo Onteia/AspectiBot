@@ -41,8 +41,12 @@ import com.github.twitch4j.events.ChannelGoOfflineEvent;
 import com.github.twitch4j.events.ChannelViewerCountUpdateEvent;
 import com.github.twitch4j.helix.domain.Stream;
 import com.github.twitch4j.helix.domain.Video;
+import com.github.twitch4j.pubsub.domain.ChannelPointsRedemption;
+import com.github.twitch4j.pubsub.events.RewardRedeemedEvent;
+import com.theokanning.openai.OpenAiService;
+import com.theokanning.openai.completion.CompletionChoice;
+import com.theokanning.openai.completion.CompletionRequest;
 
-import commands.ArtificialIntelligenceCommand;
 import commands.BrainpowerCommand;
 import commands.EmotesCommand;
 import commands.LeaderboardCommand;
@@ -63,7 +67,6 @@ import net.dv8tion.jda.api.entities.Icon;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.Role;
-import net.dv8tion.jda.api.entities.channel.concrete.NewsChannel;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.GatewayIntent;
@@ -150,7 +153,7 @@ public class AspectiBot extends ListenerAdapter {
 
 		// Logger logger = (Logger) LoggerFactory.getLogger(ASPECTICOR);
 		// logger.setLevel(Level.INFO);
-        //Class<AspectiBot> c = AspectiBot.class;
+		//Class<AspectiBot> c = AspectiBot.class;
 		//System.out.println(c.getName());
 		
 		// set up JDA
@@ -164,12 +167,6 @@ public class AspectiBot extends ListenerAdapter {
 
 		// get the Discord server
 		aspecticord = jda.getGuildById(SERVER_ID);
-		// if the Discord server returns invalid, send error message
-		// and exit the program
-//		if(aspecticord == null) {
-//		    System.err.println("Server ID not configured or invalid!");
-//		    System.exit(1);
-//		}
 		
 		// load offline and live icons
 		File liveFile = new File(LIVE_ICON_PATH); 
@@ -203,7 +200,8 @@ public class AspectiBot extends ListenerAdapter {
 		// Listen to aspecticor's stream
 		twitchClient.getClientHelper().enableStreamEventListener(ASPECTICOR);
 		aspecticorId = twitchClient.getChat().getChannelNameToChannelId().get(ASPECTICOR);
-
+		twitchClient.getPubSub().listenForChannelPointsRedemptionEvents(credential, aspecticorId);
+		
 		// if Aspecticor is live change activity and status
 		// also change server icon
 		goLive(eventManager, twitchClient, jda);
@@ -226,8 +224,8 @@ public class AspectiBot extends ListenerAdapter {
 		commands.put("!editcom", new LogEditCommand());
 		//commands.put("!clip", new ClipCommand());
 		commands.put("!twitchemote", new TwitchEmoteCommand());
-		commands.put("!ai", new ArtificialIntelligenceCommand());
 
+		// executing commands
 		eventManager.onEvent(ChannelMessageEvent.class, event -> {
 
 			String cmd = event.getMessage().toLowerCase().split(" ")[0];
@@ -245,6 +243,48 @@ public class AspectiBot extends ListenerAdapter {
 
 		});
 
+		// channel point stuff
+		eventManager.onEvent(RewardRedeemedEvent.class, event -> {
+		   
+		    ChannelPointsRedemption redeem = event.getRedemption();
+		    String rewardName = redeem.getReward().getTitle();
+		    
+		    // ASK THE AI
+		    if(rewardName.equalsIgnoreCase("ASK THE AI")) { 
+		        
+		        String prompt = redeem.getUserInput();
+		        String user = redeem.getUser().getDisplayName();
+		        String answer = "";
+		        
+		        while(answer.equalsIgnoreCase("")) {
+    		        try {
+    		            // Generate a GPT3 response from twitch chat question
+    		            OpenAiService service = new OpenAiService(opnAI);
+    		            CompletionRequest completionRequest = CompletionRequest.builder()
+    		                    .prompt(prompt)
+    		                    .model("text-davinci-003")
+    		                    .maxTokens(500)
+    		                    .echo(false)
+    		                    .build();
+    		            List<CompletionChoice> choices = service.createCompletion(completionRequest).getChoices();
+    		            answer = choices.get(AspectiBot.R.nextInt(choices.size())).getText();
+    		            String chatResponse = "@" + user + ": " + answer;
+    		            if(chatResponse.length() >= 500) {
+    		                twitchClient.getChat().sendMessage(ASPECTICOR, chatResponse.substring(0,495) + "...");
+                            break;
+    		            } else {
+    		                twitchClient.getChat().sendMessage(ASPECTICOR, chatResponse);
+                            break;
+    		            }	            
+    		        } catch(Exception e) {
+    		            //do nothing
+    		        }
+		        }
+		        
+		    }
+		    
+		});
+		
 	} // end of main method
 
 	@Override

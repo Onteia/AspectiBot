@@ -63,7 +63,6 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Activity;
-import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Icon;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
@@ -77,7 +76,7 @@ import net.dv8tion.jda.api.utils.MemberCachePolicy;
 
 public class AspectiBot extends ListenerAdapter {
 	
-	private static final String ASPECTICOR = "onteia";
+	private static final String ASPECTICOR = "aspecticor";
 	private static final String CONFIG_FILE = "src/config.properties";
 
 	private static String DISCORD_TOKEN_PATH;
@@ -87,22 +86,22 @@ public class AspectiBot extends ListenerAdapter {
 	private static String OFFLINE_ICON_PATH;
 	private static String THIS_FOLDER_PATH;
 	
-	/* Aspecticord settings 
+	/* Aspecticord settings */
 	public static final long SERVER_ID = 864273305330909204L; // Aspecticord Server ID
 	private static final long LIVE_CHANNEL_ID = 885705830341697536L; // #aspecticor-is-live channel
 	public static final long LOG_CHANNEL_ID = 1016876667509166100L; // #server_logs channel
 	public static final long CLIP_CHANNEL_ID = 867258015220236319L;	// #clips channel
 	private static final long DEFAULT_ROLE = 885698882695229500L; // Aspecticord default role
 	private static final String PING_ROLE = "882772072475017258"; // Aspecticord @TWITCH_PINGS	
-	*/
-	///*
+	
+	/*
 	public static final long SERVER_ID = 264217465305825281L; // SELF Discord server
 	public static final long LIVE_CHANNEL_ID = 1022422500161900634L; // #bot channel
 	public static final long LOG_CHANNEL_ID = 1022422500161900634L; // #bot channel
 	public static final long CLIP_CHANNEL_ID = 1024597131488665601L; // #clips channel
 	public static final long DEFAULT_ROLE = 853934165077393458L;
 	public static final String PING_ROLE = "853934165077393458";
-	//*/
+	*/
 
 	private static String token; // discord token
 	public static String oAuth; // twitch OAuth

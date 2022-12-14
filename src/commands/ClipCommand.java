@@ -27,29 +27,20 @@ public class ClipCommand implements TwitchCommand {
 											.execute();
 		
 		String clipId = clipData.getData().get(0).getId();
-		
-		
-		
-	    AspectiBot.twitchClient.getGraphQL()
-								.updateClip(null, clipId, clipName);
 
-		System.out.println();
-		System.out.println();
-	    System.out.println(clipData.getData().get(0).getEditUrl());
-	    System.out.println(clipData.getData().get(0).toString());
-		System.out.println();
-		System.out.println();
-		
-		
-		
 		String clipURL = "https://clips.twitch.tv/" + clipId;
 		
 		
 		
 		// send a message in the discord of the clip
-		TextChannel clipChannel = AspectiBot.aspecticord.getTextChannelById(AspectiBot.CLIP_CHANNEL_ID);
+		TextChannel clipChannel = AspectiBot.jda.getTextChannelById(AspectiBot.CLIP_CHANNEL_ID);
 		if(clipChannel != null) {
-		    clipChannel.sendMessage(clipURL).submit();
+		    if(clipName.equalsIgnoreCase("")) {
+		        
+		    }
+		    String clipMessage = "***" + clipName + "*** clipped by " + event.getUser().getName() + "\n" + clipURL; 
+		    
+		    clipChannel.sendMessage(clipMessage).submit();
 		} else {
 		    System.err.println("Clip Channel ID not configured or invalid");
 		}

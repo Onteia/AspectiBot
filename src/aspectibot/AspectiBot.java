@@ -48,6 +48,7 @@ import com.theokanning.openai.completion.CompletionChoice;
 import com.theokanning.openai.completion.CompletionRequest;
 
 import commands.BrainpowerCommand;
+import commands.ClipCommand;
 import commands.EmotesCommand;
 import commands.LeaderboardCommand;
 import commands.LogAddCommand;
@@ -62,7 +63,6 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Activity;
-import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Icon;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
@@ -95,20 +95,19 @@ public class AspectiBot extends ListenerAdapter {
 	private static final String PING_ROLE = "882772072475017258"; // Aspecticord @TWITCH_PINGS	
 	
 	/*
-	public static final long SERVER_ID = 323163248784310282L; // SELF Discord server
-	public static final long LIVE_CHANNEL_ID = 853921144770789397L; // #bot channel
-	public static final long LOG_CHANNEL_ID = 853921144770789397L; // #bot channel
-	public static final long CLIP_CHANNEL_ID = 853921144770789397L; // #clips channel
+	public static final long SERVER_ID = 264217465305825281L; // SELF Discord server
+	public static final long LIVE_CHANNEL_ID = 1022422500161900634L; // #bot channel
+	public static final long LOG_CHANNEL_ID = 1022422500161900634L; // #bot channel
+	public static final long CLIP_CHANNEL_ID = 1024597131488665601L; // #clips channel
 	public static final long DEFAULT_ROLE = 853934165077393458L;
 	public static final String PING_ROLE = "853934165077393458";
-	 */
+	*/
 
 	private static String token; // discord token
 	public static String oAuth; // twitch OAuth
 	public static String opnAI; // OpenAI token
 	public static Icon liveIcon;
 	public static Icon offlineIcon;
-	public static Guild aspecticord;
 	
 	public enum StreamStatus {
 		LIVE,
@@ -151,8 +150,6 @@ public class AspectiBot extends ListenerAdapter {
 			loadCredentials();
 		}
 
-		// Logger logger = (Logger) LoggerFactory.getLogger(ASPECTICOR);
-		// logger.setLevel(Level.INFO);
 		//Class<AspectiBot> c = AspectiBot.class;
 		//System.out.println(c.getName());
 		
@@ -164,9 +161,6 @@ public class AspectiBot extends ListenerAdapter {
 				.build();
 		jda.getPresence().setStatus(OnlineStatus.IDLE);	
 		jda.addEventListener(new DiscordServerListener());
-
-		// get the Discord server
-		aspecticord = jda.getGuildById(SERVER_ID);
 		
 		// load offline and live icons
 		File liveFile = new File(LIVE_ICON_PATH); 
@@ -222,7 +216,7 @@ public class AspectiBot extends ListenerAdapter {
 		commands.put("!showcom", new LogShowCommand());
 		commands.put("!delcom", new LogDeleteCommand());
 		commands.put("!editcom", new LogEditCommand());
-		//commands.put("!clip", new ClipCommand());
+		commands.put("!clip", new ClipCommand());
 		commands.put("!twitchemote", new TwitchEmoteCommand());
 
 		// executing commands
@@ -263,7 +257,7 @@ public class AspectiBot extends ListenerAdapter {
     		            CompletionRequest completionRequest = CompletionRequest.builder()
     		                    .prompt(prompt)
     		                    .model("text-davinci-003")
-    		                    .maxTokens(500)
+    		                    .maxTokens(300)
     		                    .echo(false)
     		                    .build();
     		            List<CompletionChoice> choices = service.createCompletion(completionRequest).getChoices();
@@ -317,12 +311,10 @@ public class AspectiBot extends ListenerAdapter {
 			            .sendMessage("<@&"+ PING_ROLE +"> HE'S LIVE!!!")
 			            .addEmbeds(goLiveEmbed.build())
 			            .complete();
-				
+			    
 			    // change icon to Live version
-			    aspecticord.getManager().setIcon(liveIcon).queue();
-				} else {
-				    System.err.println("Live-message Channel not configured or invalid!");
-				}
+			    jda.getGuildById(SERVER_ID).getManager().setIcon(liveIcon).queue();
+			}
 
 		});
 		// Update stream info when title is changed
@@ -337,7 +329,6 @@ public class AspectiBot extends ListenerAdapter {
 		});
 		// Update stream info when viewercount changes
 		eventManager.onEvent(ChannelViewerCountUpdateEvent.class, event -> {
-			System.err.println("Change in viewer count");
 			EmbedBuilder newEmbed = formatEmbed(event.getStream());
 			streamNotificationMessage = streamNotificationMessage.editMessageEmbeds(newEmbed.build()).complete();
 		});
@@ -468,7 +459,7 @@ public class AspectiBot extends ListenerAdapter {
 			streamNotificationMessage = null;
 			
 			// change icon to Offline version
-			aspecticord.getManager().setIcon(offlineIcon).submit();
+			jda.getGuildById(SERVER_ID).getManager().setIcon(offlineIcon).submit();
 			
 		});
 

@@ -263,7 +263,7 @@ public class AspectiBot extends ListenerAdapter {
     		            CompletionRequest completionRequest = CompletionRequest.builder()
     		                    .prompt(prompt)
     		                    .model("text-davinci-003")
-    		                    .maxTokens(500)
+    		                    .maxTokens(300)
     		                    .echo(false)
     		                    .build();
     		            List<CompletionChoice> choices = service.createCompletion(completionRequest).getChoices();

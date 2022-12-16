@@ -2,12 +2,17 @@ package aspectibot;
 
 import java.time.format.DateTimeFormatter;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
+import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -144,6 +149,22 @@ public class DiscordServerListener extends ListenerAdapter {
 		}
 	}
 
+	@Override
+    public void onGuildMemberJoin(GuildMemberJoinEvent event) {
+        
+        // get the member who joined
+        Member member = event.getMember();
+        // give member who joined the default role
+        System.out.println(member.getEffectiveName() + " just joined!!");
+        Role defaultRole = event.getJDA().getRoleById(AspectiBot.DEFAULT_ROLE);
+        if(defaultRole != null) {
+            event.getMember().getGuild().addRoleToMember(member, defaultRole).queue();
+        } else {
+            AspectiBot.LOGGER.error("Default role not configured or invalid!");
+        }
+
+    } // end of onGuildMemberJoin method
+	
 	// when refactoring I took a crack at these two methods
 	// I'll figure them out later -Atlae (Clueless)
 	

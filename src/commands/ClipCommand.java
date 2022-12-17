@@ -1,5 +1,8 @@
 package commands;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
 import com.github.twitch4j.helix.domain.CreateClipList;
 
@@ -9,6 +12,8 @@ import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 
 public class ClipCommand implements TwitchCommand {
 
+    private final Logger LOG = LoggerFactory.getLogger(ClipCommand.class);
+    
 	public String response(ChannelMessageEvent event) {
 		
 		String[] messageArray = event.getMessage().split(" ");
@@ -27,10 +32,7 @@ public class ClipCommand implements TwitchCommand {
 											.execute();
 		
 		String clipId = clipData.getData().get(0).getId();
-
 		String clipURL = "https://clips.twitch.tv/" + clipId;
-		
-		
 		
 		// send a message in the discord of the clip
 		TextChannel clipChannel = AspectiBot.jda.getTextChannelById(AspectiBot.CLIP_CHANNEL_ID);
@@ -42,12 +44,11 @@ public class ClipCommand implements TwitchCommand {
 		    
 		    clipChannel.sendMessage(clipMessage).submit();
 		} else {
-		    System.err.println("Clip Channel ID not configured or invalid");
+		    LOG.error("response: Clip Channel ID not configured or invalid!");
 		}
 		
 		// send a message in Twitch Chat that the clip was made
 		return "here's your clip: " + clipURL;
-		// return "";
 	}
 	
 }

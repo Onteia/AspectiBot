@@ -20,12 +20,14 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
 public class DiscordServerListener extends ListenerAdapter {
 
+    private final Logger LOG = LoggerFactory.getLogger(DiscordServerListener.class);
+    
 	@Override
 	public void onMessageReceived(MessageReceivedEvent event) {
 		Message message = event.getMessage();
 		Member m = event.getMember();
 		if(m == null) {
-            System.err.println("Member is null!");
+            LOG.error("onMessageReceived: Member is null!");
             return;
         }
 		GuildChannel channel;
@@ -80,6 +82,8 @@ public class DiscordServerListener extends ListenerAdapter {
 			TextChannel logChannel = guild.getTextChannelById(AspectiBot.LOG_CHANNEL_ID);
 			if(logChannel != null) {
 			    logChannel.sendMessageEmbeds(logMessage.build()).complete();
+			} else {
+			    LOG.error("onMessageReceived: logChannel is null!");
 			}
 			logMessage.clear();
 		
@@ -93,7 +97,7 @@ public class DiscordServerListener extends ListenerAdapter {
 		Message message = event.getMessage();
 		Member m = event.getMember();
 		if(m == null) {
-		    System.err.println("Member is null!");
+		    LOG.error("onMessageUpdate: Member is null!");
 		    return;
 		}
 		GuildChannel channel;
@@ -143,6 +147,8 @@ public class DiscordServerListener extends ListenerAdapter {
 			TextChannel logChannel = guild.getTextChannelById(AspectiBot.LOG_CHANNEL_ID);
 			if(logChannel != null) {
 			    logChannel.sendMessageEmbeds(logMessage.build()).complete();
+			} else {
+			    LOG.error("onMessageUpdate: logChannel is null!");			    
 			}
 			logMessage.clear();
 		
@@ -154,13 +160,13 @@ public class DiscordServerListener extends ListenerAdapter {
         
         // get the member who joined
         Member member = event.getMember();
+        
         // give member who joined the default role
-        System.out.println(member.getEffectiveName() + " just joined!!");
         Role defaultRole = event.getJDA().getRoleById(AspectiBot.DEFAULT_ROLE);
         if(defaultRole != null) {
             event.getMember().getGuild().addRoleToMember(member, defaultRole).queue();
         } else {
-            AspectiBot.LOGGER.error("Default role not configured or invalid!");
+            LOG.error("onGuildMemberJoin: Default role not configured or invalid!");
         }
 
     } // end of onGuildMemberJoin method

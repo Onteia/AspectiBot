@@ -75,7 +75,7 @@ import net.dv8tion.jda.api.utils.MemberCachePolicy;
 
 public class AspectiBot {
 	
-	private static final String ASPECTICOR = "onteia";
+	private static final String ASPECTICOR = "aspecticor";
 	private static final String CONFIG_FILE = "src/config.properties";
 
 	private static String DISCORD_TOKEN_PATH;
@@ -85,24 +85,24 @@ public class AspectiBot {
 	private static String OFFLINE_ICON_PATH;
 	private static String THIS_FOLDER_PATH;
 	
-	/* Aspecticord settings 
+	/* Aspecticord settings */
 	public static final long SERVER_ID = 864273305330909204L; // Aspecticord Server ID
 	private static final long LIVE_CHANNEL_ID = 885705830341697536L; // #aspecticor-is-live channel
 	public static final long LOG_CHANNEL_ID = 1016876667509166100L; // #server_logs channel
 	public static final long CLIP_CHANNEL_ID = 867258015220236319L;	// #clips channel
-	private static final long DEFAULT_ROLE = 885698882695229500L; // Aspecticord default role
+	public static final long DEFAULT_ROLE = 885698882695229500L; // Aspecticord default role
 	private static final String PING_ROLE = "882772072475017258"; // Aspecticord @TWITCH_PINGS	
-	*/
-	///*
-	public static final long SERVER_ID = 264217465305825281L; // SELF Discord server
-	public static final long LIVE_CHANNEL_ID = 1022422500161900634L; // #bot channel
-	public static final long LOG_CHANNEL_ID = 1022422500161900634L; // #bot channel
-	public static final long CLIP_CHANNEL_ID = 1024597131488665601L; // #clips channel
+	//*/
+	
+	/* Test Server settings 
+	public static final long SERVER_ID = 264217465305825281L;
+	public static final long LIVE_CHANNEL_ID = 1022422500161900634L;
+	public static final long LOG_CHANNEL_ID = 1022427876609495100L;
+	public static final long CLIP_CHANNEL_ID = 1024597131488665601L;
 	public static final long DEFAULT_ROLE = 1053423521604309062L;
 	public static final String PING_ROLE = "853934165077393458";
 	//*/
 
-	public static final Logger LOGGER = LoggerFactory.getLogger(AspectiBot.class);
 	private static String token; // discord token
 	public static String oAuth; // twitch OAuth
 	public static String opnAI; // OpenAI token
@@ -115,6 +115,7 @@ public class AspectiBot {
 	}
 
 	private static StreamStatus streamStatus = StreamStatus.OFFLINE;
+	private final static Logger LOG = LoggerFactory.getLogger(AspectiBot.class);
 	
 	public static String aspecticorId;
 	public static TwitchClient twitchClient;
@@ -149,9 +150,6 @@ public class AspectiBot {
 			//load credentials
 			loadCredentials();
 		}
-
-		//Class<AspectiBot> c = AspectiBot.class;
-		//System.out.println(c.getName());
 		
 		// set up JDA
 		jda = JDABuilder.createDefault(token)
@@ -272,6 +270,7 @@ public class AspectiBot {
     		            }	            
     		        } catch(Exception e) {
     		            //do nothing
+    		            LOG.error("");
     		        }
 		        }
 		        
@@ -354,6 +353,8 @@ public class AspectiBot {
 			// null safety
 			if(response != null) {
 			    jda.getPresence().setActivity(Activity.watching(response));
+			} else {
+			    LOG.error("goOffline: Offline status response is null!");
 			}
 			
 			List<Video> vodList = twitchClient.getHelix().getVideos(oAuth, null, aspecticorId, null, null, "day", "time", "archive", null, null, 1).execute().getVideos();
@@ -437,6 +438,7 @@ public class AspectiBot {
 				combinedImage.delete();
 				
 			} catch(Exception e) {
+			    LOG.error("goOffline: Error creating the VOD thumbnail!");
 				e.printStackTrace();
 			}
 			
@@ -460,6 +462,7 @@ public class AspectiBot {
 								   .execute()
 								   .getModerators();
 			} catch (Exception e) {
+			    LOG.error("whisper: Error getting Twitch Moderators!");
 				StringWriter sw = new StringWriter();
 				e.printStackTrace(new PrintWriter(sw));
 				System.err.println(sw.toString());
@@ -548,9 +551,7 @@ public class AspectiBot {
 				opnAI = br3.readLine();
 			}
 		} catch (Exception e) {
-
-			System.err.println("Authentication Failed");
-
+		    LOG.error("loadCredentials: Authentication Failed!");
 		}
 		
 	}

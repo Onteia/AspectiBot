@@ -4,3 +4,4 @@ src/config.properties
 target/
 client.log
 *.jar
+*.sav

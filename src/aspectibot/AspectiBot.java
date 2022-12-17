@@ -7,6 +7,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -120,7 +122,7 @@ public class AspectiBot {
 	public static String aspecticorId;
 	public static TwitchClient twitchClient;
 	public static JDA jda;
-	public static Message streamNotificationMessage = null;
+	private static String notificationMessageId = "";
 
 	public static final Random R = new Random();
 
@@ -150,6 +152,8 @@ public class AspectiBot {
 			//load credentials
 			loadCredentials();
 		}
+		
+		readSaveFile();
 		
 		// set up JDA
 		jda = JDABuilder.createDefault(token)
@@ -183,7 +187,6 @@ public class AspectiBot {
 				.withChatAccount(credential)
 				.withEnablePubSub(true)
 				.withEnableTMI(true)
-				.withEnableGraphQL(true)
 				.build();
 
 		// join Aspect's stream
@@ -270,7 +273,6 @@ public class AspectiBot {
     		            }	            
     		        } catch(Exception e) {
     		            //do nothing
-    		            LOG.error("");
     		        }
 		        }
 		        
@@ -290,10 +292,22 @@ public class AspectiBot {
 				
 				EmbedBuilder goLiveEmbed = formatEmbed(event.getStream());
 				
-			    streamNotificationMessage = jda.getNewsChannelById(AspectiBot.LIVE_CHANNEL_ID)
+			    Message streamNotificationMessage = jda.getNewsChannelById(AspectiBot.LIVE_CHANNEL_ID)
 			            .sendMessage("<@&"+ PING_ROLE +"> HE'S LIVE!!!")
 			            .addEmbeds(goLiveEmbed.build())
 			            .complete();
+			    notificationMessageId = streamNotificationMessage.getId();
+			    File idFile = new File(AspectiBot.THIS_FOLDER_PATH + "notifID.sav");
+			    try {
+                    if(idFile.createNewFile()) {
+                        FileWriter fw = new FileWriter(idFile);
+                        fw.write(notificationMessageId);
+                        fw.close();
+                    }
+                } catch (IOException e) {
+                    LOG.error("goLive: Unable to create save file for the message ID");
+                    e.printStackTrace();
+                }
 			    
 			    // change icon to Live version
 			    jda.getGuildById(SERVER_ID).getManager().setIcon(liveIcon).queue();
@@ -302,18 +316,18 @@ public class AspectiBot {
 		});
 		// Update stream info when title is changed
 		eventManager.onEvent(ChannelChangeTitleEvent.class, event -> {
-			EmbedBuilder newEmbed = formatEmbed(event.getStream());
-			streamNotificationMessage = streamNotificationMessage.editMessageEmbeds(newEmbed.build()).complete();
+			EmbedBuilder newEmbed = formatEmbed(event.getStream());	
+			jda.getNewsChannelById(AspectiBot.LIVE_CHANNEL_ID).editMessageEmbedsById(notificationMessageId, newEmbed.build()).complete();
 		});
 		// Update stream info when game/category is changed
 		eventManager.onEvent(ChannelChangeGameEvent.class, event -> {
 			EmbedBuilder newEmbed = formatEmbed(event.getStream());
-			streamNotificationMessage = streamNotificationMessage.editMessageEmbeds(newEmbed.build()).complete();
+			jda.getNewsChannelById(AspectiBot.LIVE_CHANNEL_ID).editMessageEmbedsById(notificationMessageId, newEmbed.build()).complete();
 		});
 		// Update stream info when viewercount changes
 		eventManager.onEvent(ChannelViewerCountUpdateEvent.class, event -> {
 			EmbedBuilder newEmbed = formatEmbed(event.getStream());
-			streamNotificationMessage = streamNotificationMessage.editMessageEmbeds(newEmbed.build()).complete();
+			jda.getNewsChannelById(AspectiBot.LIVE_CHANNEL_ID).editMessageEmbedsById(notificationMessageId, newEmbed.build()).complete();
 		});
 
 	}
@@ -432,7 +446,12 @@ public class AspectiBot {
 				
 				File vodThumbnail = new File(THIS_FOLDER_PATH + "vod_thumbnail.png");
 				
-				streamNotificationMessage.editMessageEmbeds(offlineEmbed.build()).setFiles(files).complete();
+				jda.getNewsChannelById(AspectiBot.LIVE_CHANNEL_ID)
+				    .editMessageEmbedsById(
+				            notificationMessageId, 
+				            offlineEmbed.build())
+				    .setFiles(files)
+				    .complete();
 				
 				vodThumbnail.delete();
 				combinedImage.delete();
@@ -442,7 +461,11 @@ public class AspectiBot {
 				e.printStackTrace();
 			}
 			
-			streamNotificationMessage = null;
+			// delete messageId value from the save file
+			// and set id to ""
+			File notifIdFile = new File(AspectiBot.THIS_FOLDER_PATH + "notifID.sav");
+			notifIdFile.delete();
+			notificationMessageId = "";
 			
 			// change icon to Offline version
 			jda.getGuildById(SERVER_ID).getManager().setIcon(offlineIcon).submit();
@@ -530,6 +553,23 @@ public class AspectiBot {
 		
 	}
 		
+	public static void readSaveFile() {
+	    File saveFile = new File(AspectiBot.THIS_FOLDER_PATH + "notifID.sav");
+	    try {
+            BufferedReader br = new BufferedReader(new FileReader(saveFile));
+            AspectiBot.notificationMessageId = br.readLine();
+            br.close();
+            LOG.info("readSaveFile: Save file successfully read!");
+        } catch (FileNotFoundException e) {
+            // file not found
+            AspectiBot.notificationMessageId = "";
+            LOG.info("readSaveFile: File not found because previous stream ended before this program restarted!");
+        } catch (IOException e) {
+            LOG.error("readSaveFile: Unable to read the save file!");
+            e.printStackTrace();
+        }
+	}
+	
 	public static void loadCredentials() {
 		
 		try {

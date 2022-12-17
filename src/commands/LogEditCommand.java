@@ -5,6 +5,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
 import com.github.twitch4j.common.enums.CommandPermission;
 
@@ -12,6 +15,8 @@ import aspectibot.TwitchCommand;
 
 public class LogEditCommand implements TwitchCommand {
 
+    private final Logger LOG = LoggerFactory.getLogger(LogEditCommand.class);
+    
 	public String response(ChannelMessageEvent event) {
 		String[] message = event.getMessage().split(" ");
 		Set<CommandPermission> perms = event.getPermissions();
@@ -43,6 +48,7 @@ public class LogEditCommand implements TwitchCommand {
 				return "";
 				
 			} catch(IOException e) {
+			    LOG.error("response: Could not find the command file, " + command_name + ".txt!");
 				return "@Onteia you done fucked up again! Madge";
 			}
 		}

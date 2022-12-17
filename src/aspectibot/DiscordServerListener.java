@@ -2,12 +2,17 @@ package aspectibot;
 
 import java.time.format.DateTimeFormatter;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
+import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -15,12 +20,14 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
 public class DiscordServerListener extends ListenerAdapter {
 
+    private final Logger LOG = LoggerFactory.getLogger(DiscordServerListener.class);
+    
 	@Override
 	public void onMessageReceived(MessageReceivedEvent event) {
 		Message message = event.getMessage();
 		Member m = event.getMember();
 		if(m == null) {
-            System.err.println("Member is null!");
+            LOG.error("onMessageReceived: Member is null!");
             return;
         }
 		GuildChannel channel;
@@ -75,6 +82,8 @@ public class DiscordServerListener extends ListenerAdapter {
 			TextChannel logChannel = guild.getTextChannelById(AspectiBot.LOG_CHANNEL_ID);
 			if(logChannel != null) {
 			    logChannel.sendMessageEmbeds(logMessage.build()).complete();
+			} else {
+			    LOG.error("onMessageReceived: logChannel is null!");
 			}
 			logMessage.clear();
 		
@@ -88,7 +97,7 @@ public class DiscordServerListener extends ListenerAdapter {
 		Message message = event.getMessage();
 		Member m = event.getMember();
 		if(m == null) {
-		    System.err.println("Member is null!");
+		    LOG.error("onMessageUpdate: Member is null!");
 		    return;
 		}
 		GuildChannel channel;
@@ -138,12 +147,30 @@ public class DiscordServerListener extends ListenerAdapter {
 			TextChannel logChannel = guild.getTextChannelById(AspectiBot.LOG_CHANNEL_ID);
 			if(logChannel != null) {
 			    logChannel.sendMessageEmbeds(logMessage.build()).complete();
+			} else {
+			    LOG.error("onMessageUpdate: logChannel is null!");			    
 			}
 			logMessage.clear();
 		
 		}
 	}
 
+	@Override
+    public void onGuildMemberJoin(GuildMemberJoinEvent event) {
+        
+        // get the member who joined
+        Member member = event.getMember();
+        
+        // give member who joined the default role
+        Role defaultRole = event.getJDA().getRoleById(AspectiBot.DEFAULT_ROLE);
+        if(defaultRole != null) {
+            event.getMember().getGuild().addRoleToMember(member, defaultRole).queue();
+        } else {
+            LOG.error("onGuildMemberJoin: Default role not configured or invalid!");
+        }
+
+    } // end of onGuildMemberJoin method
+	
 	// when refactoring I took a crack at these two methods
 	// I'll figure them out later -Atlae (Clueless)
 	

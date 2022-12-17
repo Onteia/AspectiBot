@@ -26,6 +26,9 @@ import java.util.Random;
 
 import javax.imageio.ImageIO;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.github.philippheuer.credentialmanager.domain.OAuth2Credential;
 import com.github.philippheuer.events4j.core.EventManager;
 import com.github.philippheuer.events4j.simple.SimpleEventHandler;
@@ -64,17 +67,13 @@ import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.Icon;
-import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.Role;
-import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent;
-import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.FileUpload;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 
-public class AspectiBot extends ListenerAdapter {
+public class AspectiBot {
 	
 	private static final String ASPECTICOR = "aspecticor";
 	private static final String CONFIG_FILE = "src/config.properties";
@@ -91,17 +90,18 @@ public class AspectiBot extends ListenerAdapter {
 	private static final long LIVE_CHANNEL_ID = 885705830341697536L; // #aspecticor-is-live channel
 	public static final long LOG_CHANNEL_ID = 1016876667509166100L; // #server_logs channel
 	public static final long CLIP_CHANNEL_ID = 867258015220236319L;	// #clips channel
-	private static final long DEFAULT_ROLE = 885698882695229500L; // Aspecticord default role
+	public static final long DEFAULT_ROLE = 885698882695229500L; // Aspecticord default role
 	private static final String PING_ROLE = "882772072475017258"; // Aspecticord @TWITCH_PINGS	
+	//*/
 	
-	/*
-	public static final long SERVER_ID = 264217465305825281L; // SELF Discord server
-	public static final long LIVE_CHANNEL_ID = 1022422500161900634L; // #bot channel
-	public static final long LOG_CHANNEL_ID = 1022422500161900634L; // #bot channel
-	public static final long CLIP_CHANNEL_ID = 1024597131488665601L; // #clips channel
-	public static final long DEFAULT_ROLE = 853934165077393458L;
+	/* Test Server settings 
+	public static final long SERVER_ID = 264217465305825281L;
+	public static final long LIVE_CHANNEL_ID = 1022422500161900634L;
+	public static final long LOG_CHANNEL_ID = 1022427876609495100L;
+	public static final long CLIP_CHANNEL_ID = 1024597131488665601L;
+	public static final long DEFAULT_ROLE = 1053423521604309062L;
 	public static final String PING_ROLE = "853934165077393458";
-	*/
+	//*/
 
 	private static String token; // discord token
 	public static String oAuth; // twitch OAuth
@@ -115,6 +115,7 @@ public class AspectiBot extends ListenerAdapter {
 	}
 
 	private static StreamStatus streamStatus = StreamStatus.OFFLINE;
+	private final static Logger LOG = LoggerFactory.getLogger(AspectiBot.class);
 	
 	public static String aspecticorId;
 	public static TwitchClient twitchClient;
@@ -149,9 +150,6 @@ public class AspectiBot extends ListenerAdapter {
 			//load credentials
 			loadCredentials();
 		}
-
-		//Class<AspectiBot> c = AspectiBot.class;
-		//System.out.println(c.getName());
 		
 		// set up JDA
 		jda = JDABuilder.createDefault(token)
@@ -272,6 +270,7 @@ public class AspectiBot extends ListenerAdapter {
     		            }	            
     		        } catch(Exception e) {
     		            //do nothing
+    		            LOG.error("");
     		        }
 		        }
 		        
@@ -280,22 +279,6 @@ public class AspectiBot extends ListenerAdapter {
 		});
 		
 	} // end of main method
-
-	@Override
-	public void onGuildMemberJoin(GuildMemberJoinEvent event) {
-
-		// get the member who joined
-		Member member = event.getMember();
-		// give member who joined the default role
-		
-		Role defaultRole = event.getJDA().getRoleById(DEFAULT_ROLE);
-		if(defaultRole != null) {
-		    event.getMember().getGuild().addRoleToMember(member, defaultRole).queue();
-		} else {
-		    System.err.println("Default role not configured or invalid!");
-		}
-
-	} // end of onGuildMemberJoin method
 
 	public static void goLive(EventManager eventManager, TwitchClient twitchClient, JDA jda) {
 
@@ -370,6 +353,8 @@ public class AspectiBot extends ListenerAdapter {
 			// null safety
 			if(response != null) {
 			    jda.getPresence().setActivity(Activity.watching(response));
+			} else {
+			    LOG.error("goOffline: Offline status response is null!");
 			}
 			
 			List<Video> vodList = twitchClient.getHelix().getVideos(oAuth, null, aspecticorId, null, null, "day", "time", "archive", null, null, 1).execute().getVideos();
@@ -453,6 +438,7 @@ public class AspectiBot extends ListenerAdapter {
 				combinedImage.delete();
 				
 			} catch(Exception e) {
+			    LOG.error("goOffline: Error creating the VOD thumbnail!");
 				e.printStackTrace();
 			}
 			
@@ -476,6 +462,7 @@ public class AspectiBot extends ListenerAdapter {
 								   .execute()
 								   .getModerators();
 			} catch (Exception e) {
+			    LOG.error("whisper: Error getting Twitch Moderators!");
 				StringWriter sw = new StringWriter();
 				e.printStackTrace(new PrintWriter(sw));
 				System.err.println(sw.toString());
@@ -564,9 +551,7 @@ public class AspectiBot extends ListenerAdapter {
 				opnAI = br3.readLine();
 			}
 		} catch (Exception e) {
-
-			System.err.println("Authentication Failed");
-
+		    LOG.error("loadCredentials: Authentication Failed!");
 		}
 		
 	}

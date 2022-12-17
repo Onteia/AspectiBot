@@ -5,6 +5,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
 import com.github.twitch4j.common.enums.CommandPermission;
 
@@ -12,6 +15,8 @@ import aspectibot.TwitchCommand;
 
 public class LogAddCommand implements TwitchCommand {
 
+    private final Logger LOG = LoggerFactory.getLogger(LogAddCommand.class);
+    
 	public String response(ChannelMessageEvent event) {
 		String[] message = event.getMessage().split(" ");
 		Set<CommandPermission> perms = event.getPermissions();
@@ -26,7 +31,7 @@ public class LogAddCommand implements TwitchCommand {
 				}
 			}
 			try {			
-				File addFile = new File("/home/orangepi/jars/persistent/command_log/" + command_name + ".txt"); //"/home/orangepi/jars/AspectiBot/command_log/"
+				File addFile = new File("/home/orangepi/jars/persistent/command_log/" + command_name + ".txt");
 				if(addFile.createNewFile()) {
 					String fullMessage = "";
 					for(int i = 0; i < message.length; i++) {
@@ -40,6 +45,7 @@ public class LogAddCommand implements TwitchCommand {
 				}
 				
 			} catch(IOException e) {
+			    LOG.error("response: Unable to create " + command_name + ".txt!");
 				return "@Onteia you done fucked up again! Madge";
 			}
 		}

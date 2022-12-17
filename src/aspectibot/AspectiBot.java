@@ -7,6 +7,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -151,6 +153,8 @@ public class AspectiBot {
 			loadCredentials();
 		}
 		
+		readSaveFile();
+		
 		// set up JDA
 		jda = JDABuilder.createDefault(token)
 				.setChunkingFilter(ChunkingFilter.ALL)
@@ -183,7 +187,6 @@ public class AspectiBot {
 				.withChatAccount(credential)
 				.withEnablePubSub(true)
 				.withEnableTMI(true)
-				.withEnableGraphQL(true)
 				.build();
 
 		// join Aspect's stream
@@ -294,6 +297,17 @@ public class AspectiBot {
 			            .addEmbeds(goLiveEmbed.build())
 			            .complete();
 			    notificationMessageId = streamNotificationMessage.getId();
+			    File idFile = new File(AspectiBot.THIS_FOLDER_PATH + "notifID.sav");
+			    try {
+                    if(idFile.createNewFile()) {
+                        FileWriter fw = new FileWriter(idFile);
+                        fw.write(notificationMessageId);
+                        fw.close();
+                    }
+                } catch (IOException e) {
+                    LOG.error("goLive: Unable to create save file for the message ID");
+                    e.printStackTrace();
+                }
 			    
 			    // change icon to Live version
 			    jda.getGuildById(SERVER_ID).getManager().setIcon(liveIcon).queue();
@@ -449,6 +463,8 @@ public class AspectiBot {
 			
 			// delete messageId value from the save file
 			// and set id to ""
+			File notifIdFile = new File(AspectiBot.THIS_FOLDER_PATH + "notifID.sav");
+			notifIdFile.delete();
 			notificationMessageId = "";
 			
 			// change icon to Offline version
@@ -537,6 +553,23 @@ public class AspectiBot {
 		
 	}
 		
+	public static void readSaveFile() {
+	    File saveFile = new File(AspectiBot.THIS_FOLDER_PATH + "notifID.sav");
+	    try {
+            BufferedReader br = new BufferedReader(new FileReader(saveFile));
+            AspectiBot.notificationMessageId = br.readLine();
+            br.close();
+            LOG.info("readSaveFile: Save file successfully read!");
+        } catch (FileNotFoundException e) {
+            // file not found
+            AspectiBot.notificationMessageId = "";
+            LOG.info("readSaveFile: File not found because previous stream ended before this program restarted!");
+        } catch (IOException e) {
+            LOG.error("readSaveFile: Unable to read the save file!");
+            e.printStackTrace();
+        }
+	}
+	
 	public static void loadCredentials() {
 		
 		try {

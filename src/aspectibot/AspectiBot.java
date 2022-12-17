@@ -120,7 +120,7 @@ public class AspectiBot {
 	public static String aspecticorId;
 	public static TwitchClient twitchClient;
 	public static JDA jda;
-	public static Message streamNotificationMessage = null;
+	private static String notificationMessageId = "";
 
 	public static final Random R = new Random();
 
@@ -270,7 +270,6 @@ public class AspectiBot {
     		            }	            
     		        } catch(Exception e) {
     		            //do nothing
-    		            LOG.error("");
     		        }
 		        }
 		        
@@ -290,10 +289,11 @@ public class AspectiBot {
 				
 				EmbedBuilder goLiveEmbed = formatEmbed(event.getStream());
 				
-			    streamNotificationMessage = jda.getNewsChannelById(AspectiBot.LIVE_CHANNEL_ID)
+			    Message streamNotificationMessage = jda.getNewsChannelById(AspectiBot.LIVE_CHANNEL_ID)
 			            .sendMessage("<@&"+ PING_ROLE +"> HE'S LIVE!!!")
 			            .addEmbeds(goLiveEmbed.build())
 			            .complete();
+			    notificationMessageId = streamNotificationMessage.getId();
 			    
 			    // change icon to Live version
 			    jda.getGuildById(SERVER_ID).getManager().setIcon(liveIcon).queue();
@@ -302,18 +302,18 @@ public class AspectiBot {
 		});
 		// Update stream info when title is changed
 		eventManager.onEvent(ChannelChangeTitleEvent.class, event -> {
-			EmbedBuilder newEmbed = formatEmbed(event.getStream());
-			streamNotificationMessage = streamNotificationMessage.editMessageEmbeds(newEmbed.build()).complete();
+			EmbedBuilder newEmbed = formatEmbed(event.getStream());	
+			jda.getNewsChannelById(AspectiBot.LIVE_CHANNEL_ID).editMessageEmbedsById(notificationMessageId, newEmbed.build()).complete();
 		});
 		// Update stream info when game/category is changed
 		eventManager.onEvent(ChannelChangeGameEvent.class, event -> {
 			EmbedBuilder newEmbed = formatEmbed(event.getStream());
-			streamNotificationMessage = streamNotificationMessage.editMessageEmbeds(newEmbed.build()).complete();
+			jda.getNewsChannelById(AspectiBot.LIVE_CHANNEL_ID).editMessageEmbedsById(notificationMessageId, newEmbed.build()).complete();
 		});
 		// Update stream info when viewercount changes
 		eventManager.onEvent(ChannelViewerCountUpdateEvent.class, event -> {
 			EmbedBuilder newEmbed = formatEmbed(event.getStream());
-			streamNotificationMessage = streamNotificationMessage.editMessageEmbeds(newEmbed.build()).complete();
+			jda.getNewsChannelById(AspectiBot.LIVE_CHANNEL_ID).editMessageEmbedsById(notificationMessageId, newEmbed.build()).complete();
 		});
 
 	}
@@ -432,7 +432,12 @@ public class AspectiBot {
 				
 				File vodThumbnail = new File(THIS_FOLDER_PATH + "vod_thumbnail.png");
 				
-				streamNotificationMessage.editMessageEmbeds(offlineEmbed.build()).setFiles(files).complete();
+				jda.getNewsChannelById(AspectiBot.LIVE_CHANNEL_ID)
+				    .editMessageEmbedsById(
+				            notificationMessageId, 
+				            offlineEmbed.build())
+				    .setFiles(files)
+				    .complete();
 				
 				vodThumbnail.delete();
 				combinedImage.delete();
@@ -442,7 +447,9 @@ public class AspectiBot {
 				e.printStackTrace();
 			}
 			
-			streamNotificationMessage = null;
+			// delete messageId value from the save file
+			// and set id to ""
+			notificationMessageId = "";
 			
 			// change icon to Offline version
 			jda.getGuildById(SERVER_ID).getManager().setIcon(offlineIcon).submit();

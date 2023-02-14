@@ -37,10 +37,14 @@ public class ClipCommand implements TwitchCommand {
 		// send a message in the discord of the clip
 		TextChannel clipChannel = AspectiBot.jda.getTextChannelById(AspectiBot.CLIP_CHANNEL_ID);
 		if(clipChannel != null) {
+		    
+		    String clipMessage = "";
+		    
 		    if(clipName.equalsIgnoreCase("")) {
-		        
+		        clipMessage = "Clipped by " + event.getUser().getName() + "\n" + clipURL; 
+		    } else {
+		        clipMessage = "***" + clipName + "*** clipped by " + event.getUser().getName() + "\n" + clipURL; 
 		    }
-		    String clipMessage = "***" + clipName + "*** clipped by " + event.getUser().getName() + "\n" + clipURL; 
 		    
 		    clipChannel.sendMessage(clipMessage).submit();
 		} else {

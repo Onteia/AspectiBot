@@ -5,3 +5,4 @@ target/
 client.log
 *.jar
 *.sav
+*.json

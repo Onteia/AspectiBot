@@ -85,6 +85,7 @@ public class AspectiBot {
 	private static String OPEN_AI_TOKEN_PATH;
 	private static String LIVE_ICON_PATH;
 	private static String OFFLINE_ICON_PATH;
+	public static String COMMAND_LOG_PATH;
 	private static String THIS_FOLDER_PATH;
 	
 	/* Aspecticord settings */
@@ -128,31 +129,7 @@ public class AspectiBot {
 
 	public static void main(String[] args) throws Exception {
 
-		// https://niruhan.medium.com/how-to-add-a-config-file-to-a-java-project-99fd9b6cebca
-		try (
-			FileInputStream config = new FileInputStream(CONFIG_FILE);
-		) {
-			Properties prop = new Properties();
-			prop.load(config);
-			DISCORD_TOKEN_PATH = prop.getProperty("DISCORD_TOKEN_PATH");
-			TWITCH_TOKEN_PATH = prop.getProperty("TWITCH_TOKEN_PATH");
-			OPEN_AI_TOKEN_PATH = prop.getProperty("OPEN_AI_TOKEN_PATH");
-			LIVE_ICON_PATH = prop.getProperty("LIVE_ICON_PATH");
-			OFFLINE_ICON_PATH = prop.getProperty("OFFLINE_ICON_PATH");
-			THIS_FOLDER_PATH = prop.getProperty("THIS_FOLDER_PATH");
-		} catch (FileNotFoundException e) {
-			//no config file
-			DISCORD_TOKEN_PATH = "/home/orangepi/jars/persistent/discordToken.txt";
-			TWITCH_TOKEN_PATH = "/home/orangepi/jars/persistent/twitchOAuth.txt";
-			OPEN_AI_TOKEN_PATH = "/home/orangepi/jars/persistent/openAiToken.txt";
-			LIVE_ICON_PATH = "/home/orangepi/jars/persistent/Aspecticor_Live.png";
-			OFFLINE_ICON_PATH = "/home/orangepi/jars/persistent/Aspecticor_Offline.png";
-			THIS_FOLDER_PATH = "/home/orangepi/jars/AspectiBot/";
-		} finally {
-			//load credentials
-			loadCredentials();
-		}
-		
+	    loadConfig();
 		readSaveFile();
 		
 		// set up JDA
@@ -290,6 +267,9 @@ public class AspectiBot {
 				jda.getPresence().setStatus(OnlineStatus.ONLINE);
 				jda.getPresence().setActivity(Activity.watching("Aspecticor's Stream"));
 				
+				// change icon to Live version
+                jda.getGuildById(SERVER_ID).getManager().setIcon(liveIcon).queue();
+				
 				EmbedBuilder goLiveEmbed = formatEmbed(event.getStream());
 				
 			    Message streamNotificationMessage = jda.getNewsChannelById(AspectiBot.LIVE_CHANNEL_ID)
@@ -308,11 +288,8 @@ public class AspectiBot {
                     LOG.error("goLive: Unable to create save file for the message ID");
                     e.printStackTrace();
                 }
-			    
-			    // change icon to Live version
-			    jda.getGuildById(SERVER_ID).getManager().setIcon(liveIcon).queue();
+			    LOG.info(ASPECTICOR + " went live!");
 			}
-
 		});
 		// Update stream info when title is changed
 		eventManager.onEvent(ChannelChangeTitleEvent.class, event -> {
@@ -337,6 +314,9 @@ public class AspectiBot {
 		eventManager.onEvent(ChannelGoOfflineEvent.class, event -> {
 			streamStatus = StreamStatus.OFFLINE;
 			jda.getPresence().setStatus(OnlineStatus.IDLE);
+			
+			// change icon to Offline version
+            jda.getGuildById(SERVER_ID).getManager().setIcon(offlineIcon).submit();
 			
 			//credit: https://whaa.dev/how-to-generate-random-characters-in-java
 			StringBuilder randomKey = new StringBuilder();
@@ -467,9 +447,7 @@ public class AspectiBot {
 			notifIdFile.delete();
 			notificationMessageId = "";
 			
-			// change icon to Offline version
-			jda.getGuildById(SERVER_ID).getManager().setIcon(offlineIcon).submit();
-			
+			LOG.info(ASPECTICOR + " went offline!");
 		});
 
 	} // end of goOffline method
@@ -570,10 +548,39 @@ public class AspectiBot {
         }
 	}
 	
+	public static void loadConfig() {
+	    // https://niruhan.medium.com/how-to-add-a-config-file-to-a-java-project-99fd9b6cebca
+        try (
+            FileInputStream config = new FileInputStream(CONFIG_FILE);
+        ) {
+            Properties prop = new Properties();
+            prop.load(config);
+            DISCORD_TOKEN_PATH = prop.getProperty("DISCORD_TOKEN_PATH");
+            TWITCH_TOKEN_PATH = prop.getProperty("TWITCH_TOKEN_PATH");
+            OPEN_AI_TOKEN_PATH = prop.getProperty("OPEN_AI_TOKEN_PATH");
+            LIVE_ICON_PATH = prop.getProperty("LIVE_ICON_PATH");
+            OFFLINE_ICON_PATH = prop.getProperty("OFFLINE_ICON_PATH");
+            COMMAND_LOG_PATH = prop.getProperty("COMMAND_LOG_PATH");
+            THIS_FOLDER_PATH = prop.getProperty("THIS_FOLDER_PATH");
+        } catch (FileNotFoundException e) {
+            //no config file
+            DISCORD_TOKEN_PATH = "/home/orangepi/jars/persistent/discordToken.txt";
+            TWITCH_TOKEN_PATH = "/home/orangepi/jars/persistent/twitchOAuth.txt";
+            OPEN_AI_TOKEN_PATH = "/home/orangepi/jars/persistent/openAiToken.txt";
+            LIVE_ICON_PATH = "/home/orangepi/jars/persistent/Aspecticor_Live.png";
+            OFFLINE_ICON_PATH = "/home/orangepi/jars/persistent/Aspecticor_Offline.png";
+            COMMAND_LOG_PATH = "/home/orangepi/jars/AspectiBot/src/commands/commands.json";
+            THIS_FOLDER_PATH = "/home/orangepi/jars/AspectiBot/";
+        } catch (IOException e1) {
+            LOG.error("loadConfig: IOException on loading config file!");
+        } finally {
+            //load credentials
+            loadCredentials();
+        }
+	}
+	
 	public static void loadCredentials() {
-		
 		try {
-			
 			// get the files
 			File discordToken = new File(DISCORD_TOKEN_PATH);
 			File twitchToken = new File(TWITCH_TOKEN_PATH);

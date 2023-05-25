@@ -151,7 +151,6 @@ public class DiscordServerListener extends ListenerAdapter {
 			    LOG.error("onMessageUpdate: logChannel is null!");			    
 			}
 			logMessage.clear();
-		
 		}
 	}
 
@@ -170,64 +169,4 @@ public class DiscordServerListener extends ListenerAdapter {
         }
 
     } // end of onGuildMemberJoin method
-	
-	// when refactoring I took a crack at these two methods
-	// I'll figure them out later -Atlae (Clueless)
-	
-	// public void onGuildMessageReactionAdd(MessageReactionAddEvent event) {
-		
-	// 	Member m = event.getMember();
-	// 	MessageReaction emote = event.getReaction();
-	// 	TextChannel channel = (TextChannel) event.getChannel();
-	// 	String messageId = event.getMessageId();
-	// 	String messageUrl = event.getChannel().getHistory().getMessageById(messageId).getJumpUrl();
-	// 	Guild guild = event.getGuild();
-		
-	// 	if(Long.valueOf(guild.getId()) == AspectiBot.SERVER_ID
-	// 			&& !event.getUser().isBot()) {	
-	// 		EmbedBuilder logMessage = new EmbedBuilder();
-			
-	// 		logMessage.setTitle(m.getEffectiveName(), messageUrl);
-	// 		logMessage.setDescription("#" + channel.getName());	
-	// 		logMessage.addField("reacted:", "", true);
-
-	// 		if (emote.getEmoji())
-
-	// 		logMessage.setImage(emote.getReactionEmote().getImageUrl());
-	// 		logMessage.setColor(0xf705ff);
-	// 		channel.getGuild().getTextChannelById(AspectiBot.LOG_CHANNEL_ID).sendMessage(logMessage.build()).complete();
-	// 		logMessage.clear();
-	
-		
-	// 	}
-		
-	// } 
-	
-	
-	
-	// public void onGuildMessageReactionRemove(GuildMessageReactionRemoveEvent event) {
-	// 	Member m = event.getMember();
-	// 	MessageReaction.ReactionEmote emote = event.getReactionEmote();
-	// 	TextChannel channel = event.getChannel();
-	// 	String messageId = event.getMessageId();
-	// 	String messageUrl = event.getChannel().getHistory().getMessageById(messageId).getJumpUrl();
-		
-	// 	if(channel.getGuild().getName().equalsIgnoreCase("Aspecticord")) {
-			
-	// 		if(!m.getEffectiveName().equalsIgnoreCase("AspectiBot") && !m.getEffectiveName().equalsIgnoreCase("Pingcord") && !m.getEffectiveName().equalsIgnoreCase("Pingcord") && !m.getEffectiveName().equalsIgnoreCase("YAGPDB.xyz")) {
-				
-	// 			EmbedBuilder logMessage = new EmbedBuilder();
-				
-	// 			logMessage.setTitle(m.getEffectiveName(), messageUrl);
-	// 			logMessage.setDescription("#" + channel.getName());	
-	// 			logMessage.addField("unreacted:", "", true);
-	// 			logMessage.setImage(emote.getEmote().getImageUrl());
-	// 			logMessage.setColor(0xf705ff);
-	// 			channel.getGuild().getTextChannelById(AspectiBot.LOG_CHANNEL_ID).sendMessage(logMessage.build()).complete();
-	// 			logMessage.clear();
-		
-	// 		}
-	// 	}
-	// }
-	
 }

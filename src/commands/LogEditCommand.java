@@ -1,7 +1,5 @@
 package commands;
 
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Set;
 
@@ -12,6 +10,7 @@ import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
 import com.github.twitch4j.common.enums.CommandPermission;
 
 import aspectibot.TwitchCommand;
+import utils.CommandLog;
 
 public class LogEditCommand implements TwitchCommand {
 
@@ -32,24 +31,11 @@ public class LogEditCommand implements TwitchCommand {
 			}
 			
 			try {	
-				File editFile = new File("/home/orangepi/jars/persistent/command_log/" + command_name + ".txt"); 
-				
-				editFile.delete();
-				if(editFile.createNewFile()) {
-					String fullMessage = "";
-					for(int i = 0; i < message.length; i++) {
-						fullMessage += message[i] + " ";
-					}
-					FileWriter editWriter = new FileWriter(editFile);
-					editWriter.write(fullMessage);
-					editWriter.close();
-				}
-				
+			    CommandLog.edit(command_name, event.getMessage());
 				return "";
-				
 			} catch(IOException e) {
-			    LOG.error("response: Could not find the command file, " + command_name + ".txt!");
-				return "@Onteia you done fucked up again! Madge";
+			    LOG.error("response: Unable to edit " + command_name + "!");
+				return "";
 			}
 		}
 		

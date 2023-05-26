@@ -1,6 +1,6 @@
 package commands;
 
-import java.io.File;
+import java.io.IOException;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -10,6 +10,7 @@ import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
 import com.github.twitch4j.common.enums.CommandPermission;
 
 import aspectibot.TwitchCommand;
+import utils.CommandLog;
 
 public class LogDeleteCommand implements TwitchCommand {
 
@@ -20,30 +21,16 @@ public class LogDeleteCommand implements TwitchCommand {
 		Set<CommandPermission> perms = event.getPermissions();
 		
 		if(perms.contains(CommandPermission.BROADCASTER) || perms.contains(CommandPermission.MODERATOR)) {
-			String command_name = "INIT";
-			try {
-				command_name = message[1];
-				if(!message[1].substring(0,1).equals("!")) {
-					return "Stare stop what you're doing NOW";
-				}
-			} catch (ArrayIndexOutOfBoundsException e) {
-				return "";
-			}
-			
+			if(message.length <= 1)
+			    return "";
 			try {	
-				File delFile = new File("/home/orangepi/jars/persistent/command_log/" + command_name + ".txt");
-				
-				delFile.delete();
-				
+				CommandLog.delete(message[1]);
 				return "";
-				
-			} catch(Exception e) {
-			    LOG.error("response: Unable to delete " + command_name + ". Either " + command_name + ".txt "
-			            + "doesn't exist or you don't have permissions to delete the file!");
+			} catch(IOException e) {
+			    LOG.error("response: Unable to delete " + message[1] + " from the json!");
 				return "";
 			}
 		}
-		
 		return "";
 	}
 

@@ -1,7 +1,5 @@
 package commands;
 
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Set;
 
@@ -12,6 +10,7 @@ import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
 import com.github.twitch4j.common.enums.CommandPermission;
 
 import aspectibot.TwitchCommand;
+import utils.CommandLog;
 
 public class LogAddCommand implements TwitchCommand {
 
@@ -30,23 +29,13 @@ public class LogAddCommand implements TwitchCommand {
 					break;
 				}
 			}
+			
 			try {			
-				File addFile = new File("/home/orangepi/jars/persistent/command_log/" + command_name + ".txt");
-				if(addFile.createNewFile()) {
-					String fullMessage = "";
-					for(int i = 0; i < message.length; i++) {
-						fullMessage += message[i] + " ";
-					}
-					FileWriter addWriter = new FileWriter(addFile);
-					addWriter.write(fullMessage);
-					addWriter.close();
-				} else {
-					return "";
-				}
-				
+			    CommandLog.add(command_name, event.getMessage());
+			    
 			} catch(IOException e) {
-			    LOG.error("response: Unable to create " + command_name + ".txt!");
-				return "@Onteia you done fucked up again! Madge";
+			    LOG.error("response: Unable to add " + command_name + " to the json file!");
+				return "@Onteia you fucked up again! Madge";
 			}
 		}
 		return "";	//if user isn't mod

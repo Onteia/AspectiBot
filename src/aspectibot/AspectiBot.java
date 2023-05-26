@@ -77,7 +77,7 @@ import net.dv8tion.jda.api.utils.MemberCachePolicy;
 
 public class AspectiBot {
 	
-	private static final String ASPECTICOR = "aspecticor";
+	private static final String ASPECTICOR = "onteia";
 	private static final String CONFIG_FILE = "src/config.properties";
 
 	private static String DISCORD_TOKEN_PATH;
@@ -176,10 +176,10 @@ public class AspectiBot {
 		
 		// if Aspecticor is live change activity and status
 		// also change server icon
-		goLive(eventManager, twitchClient, jda);
+		//goLive(eventManager, twitchClient, jda);
 
 		// if Aspect turns stream off, change icon back and set status to idle.
-		goOffline(eventManager, twitchClient, jda);
+		//goOffline(eventManager, twitchClient, jda);
 
 		whisper(eventManager, twitchClient, aspecticorId);
 

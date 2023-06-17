@@ -67,8 +67,10 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Activity;
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Icon;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.channel.concrete.NewsChannel;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.FileUpload;
@@ -129,7 +131,9 @@ public class AspectiBot {
 
 	public static void main(String[] args) throws Exception {
 
-	    loadConfig();
+        LOG.info("Starting AspectiBot...");
+
+		loadConfig();
 		readSaveFile();
 		
 		// set up JDA
@@ -173,7 +177,7 @@ public class AspectiBot {
 		// if Aspect turns stream off, change icon back and set status to idle.
 		goOffline(twitchClient, jda);
 
-		whisper(twitchClient, aspecticorId);
+		whisper(twitchClient);
 
 		Map<String, TwitchCommand> commands = new HashMap<>();
 
@@ -210,75 +214,88 @@ public class AspectiBot {
 		// channel point stuff
 		twitchClient.getEventManager().onEvent(RewardRedeemedEvent.class, event -> {
 			
-		    ChannelPointsRedemption redeem = event.getRedemption();
-		    String rewardName = redeem.getReward().getTitle();
+			ChannelPointsRedemption redeem = event.getRedemption();
+			String rewardName = redeem.getReward().getTitle();
 
-		    // ASK THE AI
-		    if(rewardName.equalsIgnoreCase("ASK THE AI")) { 
-		        
-		        String prompt = redeem.getUserInput();
-		        String user = redeem.getUser().getDisplayName();
-		        String answer = "";
+			// ASK THE AI
+			if(rewardName.equalsIgnoreCase("ASK THE AI")) { 
+				
+				String prompt = redeem.getUserInput();
+				String user = redeem.getUser().getDisplayName();
+				String answer = "";
 
-				System.out.println(prompt);
-				System.out.println(user);
-		        
-		        while(answer.equalsIgnoreCase("")) {
-    		        try {
-    		            // Generate a GPT3 response from twitch chat question
-    		            OpenAiService service = new OpenAiService(opnAI);
-    		            CompletionRequest completionRequest = CompletionRequest.builder()
-    		                    .prompt(prompt)
-    		                    .model("text-davinci-003")
-    		                    .maxTokens(300)
-    		                    .echo(false)
-    		                    .build();
-    		            List<CompletionChoice> choices = service.createCompletion(completionRequest).getChoices();
-    		            answer = choices.get(AspectiBot.R.nextInt(choices.size())).getText();
-    		            String chatResponse = "@" + user + ": " + answer;
+                LOG.info("AI question asked by {}: {}", user, prompt);
+				
+				while(answer.equalsIgnoreCase("")) {
+					try {
+						// Generate a GPT3 response from twitch chat question
+						OpenAiService service = new OpenAiService(opnAI);
+						CompletionRequest completionRequest = CompletionRequest.builder()
+								.prompt(prompt)
+								.model("text-davinci-003")
+								.maxTokens(300)
+								.echo(false)
+								.build();
+						List<CompletionChoice> choices = service.createCompletion(completionRequest).getChoices();
+						answer = choices.get(AspectiBot.R.nextInt(choices.size())).getText();
+						String chatResponse = "@" + user + ": " + answer;
 
-						System.out.println(chatResponse);
+						LOG.info("AI response: {}", chatResponse);
 
-    		            if(chatResponse.length() >= 500) {
-    		                twitchClient.getChat().sendMessage(ASPECTICOR, chatResponse.substring(0,495) + "...");
-                            break;
-    		            } else {
-    		                twitchClient.getChat().sendMessage(ASPECTICOR, chatResponse);
-                            break;
-    		            }	            
-    		        } catch(Exception e) {
-    		            //do nothing
-						System.out.println(e);
+						if(chatResponse.length() >= 500) {
+							twitchClient.getChat().sendMessage(ASPECTICOR, chatResponse.substring(0,495) + "...");
+							break;
+						} else {
+							twitchClient.getChat().sendMessage(ASPECTICOR, chatResponse);
+							break;
+						}	            
+					} catch(Exception e) {
+						//do nothing
+						LOG.error("AI error: {}", e.getMessage());
 						break;
-    		        }
-		        }
-		        
-		    }
-		    
+					}
+				}
+				
+			}
+			
 		});
+
+        LOG.info("AspectiBot Started!");
 		
 	} // end of main method
 
 	public static void goLive(TwitchClient twitchClient, JDA jda) {
 
+        NewsChannel newsChannel = jda.getNewsChannelById(AspectiBot.LIVE_CHANNEL_ID);
+        if (newsChannel == null){
+            LOG.error("goLive: Unable to get news channel! Channel ID: " + AspectiBot.LIVE_CHANNEL_ID);
+            return;
+        }
+
 		twitchClient.getEventManager().onEvent(ChannelGoLiveEvent.class, event -> {
-			if(streamStatus == StreamStatus.OFFLINE) {
+			if (streamStatus == StreamStatus.OFFLINE) {
 				streamStatus = StreamStatus.LIVE;
 				jda.getPresence().setStatus(OnlineStatus.ONLINE);
 				jda.getPresence().setActivity(Activity.watching("Aspecticor's Stream"));
 				
 				// change icon to Live version
-                jda.getGuildById(SERVER_ID).getManager().setIcon(liveIcon).queue();
+                Guild server = jda.getGuildById(SERVER_ID);
+
+                if (server == null)
+                    // ngl if you somehow throw this error and newsChannel isn't null, I'm impressed
+                    LOG.error("goLive: Unable to get server! Server ID: " + SERVER_ID);
+                else
+                    server.getManager().setIcon(liveIcon).queue();
 				
 				EmbedBuilder goLiveEmbed = formatEmbed(event.getStream());
-				
-			    Message streamNotificationMessage = jda.getNewsChannelById(AspectiBot.LIVE_CHANNEL_ID)
-			            .sendMessage("<@&"+ PING_ROLE +"> HE'S LIVE!!!")
-			            .addEmbeds(goLiveEmbed.build())
-			            .complete();
-			    notificationMessageId = streamNotificationMessage.getId();
-			    File idFile = new File(AspectiBot.THIS_FOLDER_PATH + "notifID.sav");
-			    try {
+                Message streamNotificationMessage = newsChannel.sendMessage("<@&"+ PING_ROLE +"> HE'S LIVE!!!")
+                        .addEmbeds(goLiveEmbed.build())
+                        .complete();
+
+                notificationMessageId = streamNotificationMessage.getId();
+                File idFile = new File(AspectiBot.THIS_FOLDER_PATH + "notifID.sav");
+                
+                try {
                     if(idFile.createNewFile()) {
                         FileWriter fw = new FileWriter(idFile);
                         fw.write(notificationMessageId);
@@ -288,23 +305,23 @@ public class AspectiBot {
                     LOG.error("goLive: Unable to create save file for the message ID");
                     e.printStackTrace();
                 }
-			    LOG.info(ASPECTICOR + " went live!");
+                LOG.info(ASPECTICOR + " went live!");				
 			}
 		});
 		// Update stream info when title is changed
 		twitchClient.getEventManager().onEvent(ChannelChangeTitleEvent.class, event -> {
 			EmbedBuilder newEmbed = formatEmbed(event.getStream());	
-			jda.getNewsChannelById(AspectiBot.LIVE_CHANNEL_ID).editMessageEmbedsById(notificationMessageId, newEmbed.build()).complete();
+			newsChannel.editMessageEmbedsById(notificationMessageId, newEmbed.build()).complete();
 		});
 		// Update stream info when game/category is changed
 		twitchClient.getEventManager().onEvent(ChannelChangeGameEvent.class, event -> {
 			EmbedBuilder newEmbed = formatEmbed(event.getStream());
-			jda.getNewsChannelById(AspectiBot.LIVE_CHANNEL_ID).editMessageEmbedsById(notificationMessageId, newEmbed.build()).complete();
+			newsChannel.editMessageEmbedsById(notificationMessageId, newEmbed.build()).complete();
 		});
 		// Update stream info when viewercount changes
 		twitchClient.getEventManager().onEvent(ChannelViewerCountUpdateEvent.class, event -> {
 			EmbedBuilder newEmbed = formatEmbed(event.getStream());
-			jda.getNewsChannelById(AspectiBot.LIVE_CHANNEL_ID).editMessageEmbedsById(notificationMessageId, newEmbed.build()).complete();
+			newsChannel.editMessageEmbedsById(notificationMessageId, newEmbed.build()).complete();
 		});
 
 	}
@@ -316,11 +333,17 @@ public class AspectiBot {
 			jda.getPresence().setStatus(OnlineStatus.IDLE);
 			
 			// change icon to Offline version
-            jda.getGuildById(SERVER_ID).getManager().setIcon(offlineIcon).submit();
-			
+            Guild server = jda.getGuildById(SERVER_ID);
+            if (server == null) {
+                LOG.error("goOffline: Unable to get server! Server ID: " + SERVER_ID);
+                return;
+            } else {
+                server.getManager().setIcon(offlineIcon).queue();
+			}
+
 			//credit: https://whaa.dev/how-to-generate-random-characters-in-java
 			StringBuilder randomKey = new StringBuilder();
-			for(int i = 0; i < 30; i++) {
+			for (int i = 0; i < 30; i++) {
 				char randomCharacter = (char)((R.nextBoolean() ? 'a' : 'A') + R.nextInt(26));
 				randomKey.append(randomCharacter);
 			}
@@ -346,113 +369,131 @@ public class AspectiBot {
 			String response = randResponses[R.nextInt(randResponses.length)];
 			// null safety
 			if(response != null) {
-			    jda.getPresence().setActivity(Activity.watching(response));
+				jda.getPresence().setActivity(Activity.watching(response));
 			} else {
-			    LOG.error("goOffline: Offline status response is null!");
+				LOG.error("goOffline: Offline status response is null!");
 			}
 			
-			List<Video> vodList = twitchClient.getHelix().getVideos(oAuth, null, aspecticorId, null, null, "day", "time", "archive", null, null, 1).execute().getVideos();
+			List<Video> vodList = twitchClient.getHelix()
+                    .getVideos(
+                        oAuth, null, aspecticorId, null, null, Video.SearchPeriod.DAY, 
+                        Video.SearchOrder.TIME, Video.Type.ARCHIVE, 1, null, null)
+                    .execute()
+                    .getVideos();
 			Video latestVod = vodList.get(0);
 			
-			try {
-				// credit: https://www.techiedelight.com/download-file-from-url-java/
-				// get a local version of the thumbnail to set up for adding overlay
-				
-				int width = 1920;
-				int height = 1080;
-				
-				URL vodThumbURL = new URL(latestVod.getThumbnailUrl(width, height));
-				InputStream in = vodThumbURL.openStream();
-				Files.copy(in, Paths.get(THIS_FOLDER_PATH + "vod_thumbnail.png"));
-				
-				// credit: https://stackoverflow.com/a/2319251
-				// adds the vod_overlay on top of the vod_thumbnail
-				BufferedImage uploadedThumbnail = ImageIO.read(new File(THIS_FOLDER_PATH + "vod_thumbnail.png"));
-				BufferedImage vodOverlay = ImageIO.read(new File(THIS_FOLDER_PATH + "vod_overlay.png"));
-				
-				BufferedImage combined = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-				Graphics g = combined.getGraphics();
-				g.drawImage(uploadedThumbnail, 0, 0, null);
-				
-				// set offset to center the overlay
-				int x_offset = (uploadedThumbnail.getWidth() - vodOverlay.getWidth()) / 2;
-				int y_offset = (uploadedThumbnail.getHeight() - vodOverlay.getHeight()) / 2;
-				
-				g.drawImage(vodOverlay, x_offset, y_offset, null);
-				g.dispose();
-				// save the image on the system
-				ImageIO.write(combined, "PNG", new File(THIS_FOLDER_PATH + "combined.png"));
-				
-				File combinedImage = new File(THIS_FOLDER_PATH + "combined.png");
-				String streamTitle = latestVod.getTitle();
-				String vodThumbnailURL = "attachment://combined.png";
-				String streamDuration = latestVod.getDuration();
-				if(streamDuration == null) streamDuration = "0";
-				String streamViewCount = latestVod.getViewCount().toString();
-				if(streamViewCount == null) streamViewCount = "0";
-				
-				// format date to look like "Wed, Sep 28, 2022"
-				SimpleDateFormat sdf = new SimpleDateFormat("EEE, MMM d, yyyy");
-				Date vodDate = sdf.parse(sdf.format(Date.from(latestVod.getPublishedAtInstant())));
-				String[] dateArray = vodDate.toString().split(" ");
-				String stringDate = dateArray[0] + ", " + dateArray[1] + " " + dateArray[2] + ", " + dateArray[5];
-				
-				EmbedBuilder offlineEmbed = new EmbedBuilder();
-				offlineEmbed.setTitle("**[VOD]** " + streamTitle, latestVod.getUrl());
-				offlineEmbed.setDescription("VOD from " + stringDate);
-				offlineEmbed.addField(
-						"__VOD View Count__:",
-						streamViewCount,
-						true);
-				offlineEmbed.addBlankField(true);
-				offlineEmbed.addField(
-						"__VOD Length__:",
-						streamDuration,
-						true);
-				offlineEmbed.setImage(vodThumbnailURL);
-				offlineEmbed.setThumbnail("https://i.imgur.com/YfplpoR.png");
-				offlineEmbed.setAuthor(
-						"Aspecticor",
-						"https://www.twitch.tv/aspecticor",
-						"https://static-cdn.jtvnw.net/jtv_user_pictures/0dd6cf74-d650-453a-8d18-403409ae5517-profile_image-70x70.png"
-						);
-				offlineEmbed.setFooter(
-						"brought to you by AspectiBot \u2764",
-						"https://i.imgur.com/hAOV52i.png");
-				offlineEmbed.setColor(0x8045f4);
-				
-				Collection<FileUpload> files = new LinkedList<FileUpload>();
-				files.add(FileUpload.fromData(combinedImage, "combined.png"));
-				
-				File vodThumbnail = new File(THIS_FOLDER_PATH + "vod_thumbnail.png");
-				
-				jda.getNewsChannelById(AspectiBot.LIVE_CHANNEL_ID)
-				    .editMessageEmbedsById(
-				            notificationMessageId, 
-				            offlineEmbed.build())
-				    .setFiles(files)
-				    .complete();
-				
-				vodThumbnail.delete();
-				combinedImage.delete();
-				
-			} catch(Exception e) {
-			    LOG.error("goOffline: Error creating the VOD thumbnail!");
-				e.printStackTrace();
-			}
+			createVodThumbnail(latestVod);
 			
 			// delete messageId value from the save file
 			// and set id to ""
 			File notifIdFile = new File(AspectiBot.THIS_FOLDER_PATH + "notifID.sav");
-			notifIdFile.delete();
-			notificationMessageId = "";
+            try {
+                Files.delete(notifIdFile.toPath());
+            } catch (IOException e) {
+                // but like how tho, you just created it
+                e.printStackTrace();
+            } finally {
+                notificationMessageId = "";
+            }
 			
 			LOG.info(ASPECTICOR + " went offline!");
 		});
 
 	} // end of goOffline method
 
-	public static void whisper(TwitchClient twitchClient, String aspecticorId) {
+	private static void createVodThumbnail(Video latestVod) {
+        try (InputStream in = new URL(latestVod.getThumbnailUrl(1920, 1080)).openStream()) {
+            // credit: https://www.techiedelight.com/download-file-from-url-java/
+            // get a local version of the thumbnail to set up for adding overlay
+            
+            int width = 1920;
+            int height = 1080;
+            
+            Files.copy(in, Paths.get(THIS_FOLDER_PATH + "vod_thumbnail.png"));
+            
+            // credit: https://stackoverflow.com/a/2319251
+            // adds the vod_overlay on top of the vod_thumbnail
+            BufferedImage uploadedThumbnail = ImageIO.read(new File(THIS_FOLDER_PATH + "vod_thumbnail.png"));
+            BufferedImage vodOverlay = ImageIO.read(new File(THIS_FOLDER_PATH + "vod_overlay.png"));
+            
+            BufferedImage combined = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+            Graphics g = combined.getGraphics();
+            g.drawImage(uploadedThumbnail, 0, 0, null);
+            
+            // set offset to center the overlay
+            int x_offset = (uploadedThumbnail.getWidth() - vodOverlay.getWidth()) / 2;
+            int y_offset = (uploadedThumbnail.getHeight() - vodOverlay.getHeight()) / 2;
+            
+            g.drawImage(vodOverlay, x_offset, y_offset, null);
+            g.dispose();
+            // save the image on the system
+            ImageIO.write(combined, "PNG", new File(THIS_FOLDER_PATH + "combined.png"));
+            
+            File combinedImage = new File(THIS_FOLDER_PATH + "combined.png");
+            String streamTitle = latestVod.getTitle();
+            String vodThumbnailURL = "attachment://combined.png";
+            String streamDuration = latestVod.getDuration();
+            if(streamDuration == null) streamDuration = "0";
+            String streamViewCount = latestVod.getViewCount().toString();
+            if(streamViewCount == null) streamViewCount = "0";
+            
+            // format date to look like "Wed, Sep 28, 2022"
+            SimpleDateFormat sdf = new SimpleDateFormat("EEE, MMM d, yyyy");
+            Date vodDate = sdf.parse(sdf.format(Date.from(latestVod.getPublishedAtInstant())));
+            String[] dateArray = vodDate.toString().split(" ");
+            String stringDate = dateArray[0] + ", " + dateArray[1] + " " + dateArray[2] + ", " + dateArray[5];
+            
+            EmbedBuilder offlineEmbed = new EmbedBuilder();
+            offlineEmbed.setTitle("**[VOD]** " + streamTitle, latestVod.getUrl());
+            offlineEmbed.setDescription("VOD from " + stringDate);
+            offlineEmbed.addField(
+                    "__VOD View Count__:",
+                    streamViewCount,
+                    true);
+            offlineEmbed.addBlankField(true);
+            offlineEmbed.addField(
+                    "__VOD Length__:",
+                    streamDuration,
+                    true);
+            offlineEmbed.setImage(vodThumbnailURL);
+            offlineEmbed.setThumbnail("https://i.imgur.com/YfplpoR.png");
+            offlineEmbed.setAuthor(
+                    "Aspecticor",
+                    "https://www.twitch.tv/aspecticor",
+                    "https://static-cdn.jtvnw.net/jtv_user_pictures/0dd6cf74-d650-453a-8d18-403409ae5517-profile_image-70x70.png"
+                    );
+            offlineEmbed.setFooter(
+                    "brought to you by AspectiBot \u2764",
+                    "https://i.imgur.com/hAOV52i.png");
+            offlineEmbed.setColor(0x8045f4);
+            
+            Collection<FileUpload> files = new LinkedList<FileUpload>();
+            files.add(FileUpload.fromData(combinedImage, "combined.png"));
+            
+            File vodThumbnail = new File(THIS_FOLDER_PATH + "vod_thumbnail.png");
+
+            NewsChannel newsChannel = jda.getNewsChannelById(AspectiBot.LIVE_CHANNEL_ID);
+
+            if (newsChannel == null) {
+                LOG.error("goOffline: Could not find the go-live channel! Check the channel ID!");
+            } else {
+                newsChannel.editMessageEmbedsById(
+                        notificationMessageId, 
+                        offlineEmbed.build())
+                    .setFiles(files)
+                    .complete();
+            }
+                
+            vodThumbnail.delete();
+            combinedImage.delete();
+            
+        } catch(Exception e) {
+            LOG.error("goOffline: Error creating the VOD thumbnail!");
+            e.printStackTrace();
+        }
+    } // end of createVodThumbnail method
+
+public static void whisper(TwitchClient twitchClient) {
 		// if a mod in twitch channel whispers bot, send chat to that twitch channel
 		twitchClient.getEventManager().onEvent(PrivateMessageEvent.class, event -> {
 			List<String> mods = Arrays.asList(modArray);
@@ -515,11 +556,9 @@ public class AspectiBot {
 	}
 		
 	public static void readSaveFile() {
-	    File saveFile = new File(AspectiBot.THIS_FOLDER_PATH + "notifID.sav");
-	    try {
-            BufferedReader br = new BufferedReader(new FileReader(saveFile));
+		File saveFile = new File(AspectiBot.THIS_FOLDER_PATH + "notifID.sav");
+		try (BufferedReader br = new BufferedReader(new FileReader(saveFile))) {
             AspectiBot.notificationMessageId = br.readLine();
-            br.close();
             LOG.info("readSaveFile: Save file successfully read!");
         } catch (FileNotFoundException e) {
             // file not found
@@ -533,9 +572,7 @@ public class AspectiBot {
 	
 	public static void loadConfig() {
 	    // https://niruhan.medium.com/how-to-add-a-config-file-to-a-java-project-99fd9b6cebca
-        try (
-            FileInputStream config = new FileInputStream(CONFIG_FILE);
-        ) {
+        try (FileInputStream config = new FileInputStream(CONFIG_FILE)) {
             Properties prop = new Properties();
             prop.load(config);
             DISCORD_TOKEN_PATH = prop.getProperty("DISCORD_TOKEN_PATH");
@@ -581,7 +618,7 @@ public class AspectiBot {
 				opnAI = br3.readLine();
 			}
 		} catch (Exception e) {
-		    LOG.error("loadCredentials: Authentication Failed!");
+			LOG.error("loadCredentials: Authentication Failed!");
 		}
 		
 	}

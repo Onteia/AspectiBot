@@ -20,73 +20,26 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
 public class DiscordServerListener extends ListenerAdapter {
 
-    private final Logger LOG = LoggerFactory.getLogger(DiscordServerListener.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DiscordServerListener.class);
     
 	@Override
 	public void onMessageReceived(MessageReceivedEvent event) {
 		Message message = event.getMessage();
 		Member m = event.getMember();
-		if(m == null) {
+		if (m == null) {
             LOG.error("onMessageReceived: Member is null!");
             return;
         }
-		GuildChannel channel;
 		
-		if(event.getChannelType().isAudio()) {
-			channel = event.getChannel().asVoiceChannel();
-		} else {
-			channel = event.getChannel().asGuildMessageChannel();
-		}
+		GuildChannel channel = (event.getChannelType().isAudio()) ? 
+									event.getChannel().asVoiceChannel() : 
+									event.getChannel().asGuildMessageChannel();
 		
 		Guild guild = channel.getGuild();
 		
-		if(Long.valueOf(guild.getId()) == AspectiBot.SERVER_ID
+		if (Long.valueOf(guild.getId()) == AspectiBot.SERVER_ID
 				&& !event.getAuthor().isBot()) {
-			
-			EmbedBuilder logMessage = new EmbedBuilder();
-			
-			logMessage.setTitle(m.getEffectiveName(), message.getJumpUrl());
-			logMessage.setDescription("#" + channel.getName());
-			if(message.getContentDisplay().length() >= 1024) {
-				logMessage.addField(
-					"posted:", 
-					message.getContentDisplay().substring(0, 1021) + "...", 
-					true);
-			} else {
-				logMessage.addField(
-					"posted:", 
-					message.getContentDisplay(), 
-					true);
-			}
-			
-			logMessage.setTimestamp(message.getTimeCreated());
-			
-			try {
-				if(message.getAttachments().get(0).isImage()) {
-					logMessage.addField(
-						"uploaded image:", 
-						"", 
-						false);
-					logMessage.setImage(message.getAttachments().get(0).getUrl());
-				} else if(message.getAttachments().get(0).isVideo()) {
-					logMessage.addField(
-						"uploaded video:", 
-						message.getAttachments().get(0).getUrl(), 
-						false);
-				}
-			} catch(Exception e) {
-				//no attachments
-			}
-			
-			logMessage.setColor(0xf705ff);
-			TextChannel logChannel = guild.getTextChannelById(AspectiBot.LOG_CHANNEL_ID);
-			if(logChannel != null) {
-			    logChannel.sendMessageEmbeds(logMessage.build()).complete();
-			} else {
-			    LOG.error("onMessageReceived: logChannel is null!");
-			}
-			logMessage.clear();
-		
+			buildEmbed(message, m, channel, guild, false);
 		}
 		
 	}
@@ -97,61 +50,78 @@ public class DiscordServerListener extends ListenerAdapter {
 		Message message = event.getMessage();
 		Member m = event.getMember();
 		if(m == null) {
-		    LOG.error("onMessageUpdate: Member is null!");
-		    return;
+			LOG.error("onMessageUpdate: Member is null!");
+			return;
 		}
-		GuildChannel channel;
-		
-		if(event.getChannelType().isAudio()) {
-			channel = event.getChannel().asVoiceChannel();
-		} else {
-			channel = event.getChannel().asGuildMessageChannel();
-		}
+
+		GuildChannel channel = (event.getChannelType().isAudio()) ? 
+									event.getChannel().asVoiceChannel() : 
+									event.getChannel().asGuildMessageChannel();
 		
 		Guild guild = channel.getGuild();
 		
 		if(Long.valueOf(guild.getId()) == AspectiBot.SERVER_ID
 				&& !event.getAuthor().isBot()) {
-			
-			EmbedBuilder logMessage = new EmbedBuilder();
+			buildEmbed(message, m, channel, guild, true);
+		}
+	}
+
+	private void buildEmbed(Message message, Member m, GuildChannel channel, Guild guild, boolean edited) {
+		EmbedBuilder logMessage = new EmbedBuilder();
 			
 			logMessage.setTitle(m.getEffectiveName(), message.getJumpUrl());
 			logMessage.setDescription("#" + channel.getName());
+
+			String name = edited ? "edited:" : "posted:";
 			
-			if(message.getContentDisplay().length() >= 1024) {
+			if (message.getContentDisplay().length() >= 1024) {
 				logMessage.addField(
-					"edited:", 
+					name, 
 					message.getContentDisplay().substring(0, 1021) + "...", 
 					true);
 			} else {
 				logMessage.addField(
-					"edited:", 
+					name, 
 					message.getContentDisplay(), 
 					true);
 			}
 			
-			logMessage.setTimestamp(message.getTimeEdited());
-			DateTimeFormatter formatter = DateTimeFormatter.RFC_1123_DATE_TIME;
-			logMessage.setFooter("original message posted: " + message.getTimeCreated().format(formatter));
+			if (!edited) {
+				logMessage.setTimestamp(message.getTimeCreated());
+			} else {
+				logMessage.setTimestamp(message.getTimeEdited());
+				DateTimeFormatter formatter = DateTimeFormatter.RFC_1123_DATE_TIME;
+				logMessage.setFooter("original message posted: " + message.getTimeCreated().format(formatter));
+			}
 			
-			try {
-				if(message.getAttachments().get(0).isImage()) {
-					logMessage.setImage(message.getAttachments().get(0).getUrl());
-				}
-			} catch(Exception e) {
-				//no attachments
+			if (!message.getAttachments().isEmpty()) {
+				// for (int i = 0; i < message.getAttachments().size(); i++) {
+					int i = 0; // TODO: I assume we would need to send a new message for each attachment
+					// probably would have to be async? mind the rate limit
+					// maybe too much work
+					if (message.getAttachments().get(i).isImage()) {
+						logMessage.addField(
+							"uploaded image:", 
+							"", 
+							false);
+						logMessage.setImage(message.getAttachments().get(i).getUrl());
+					} else if (message.getAttachments().get(i).isVideo()) {
+						logMessage.addField(
+							"uploaded video:", 
+							message.getAttachments().get(i).getUrl(), 
+							false);
+					}
+				// }
 			}
 			
 			logMessage.setColor(0xf705ff);
-			
 			TextChannel logChannel = guild.getTextChannelById(AspectiBot.LOG_CHANNEL_ID);
-			if(logChannel != null) {
-			    logChannel.sendMessageEmbeds(logMessage.build()).complete();
+			if (logChannel != null) {
+				logChannel.sendMessageEmbeds(logMessage.build()).queue();
 			} else {
-			    LOG.error("onMessageUpdate: logChannel is null!");			    
+				LOG.error("onMessageReceived: logChannel is null!");
 			}
 			logMessage.clear();
-		}
 	}
 
 	@Override

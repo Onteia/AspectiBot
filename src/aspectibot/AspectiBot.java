@@ -17,6 +17,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -115,6 +116,7 @@ public class AspectiBot {
 		OFFLINE;
 	}
 
+	private static String[] modArray = {"aspectibot", "atlae99", "b00kitten", "botspecticor", "brenroarn", "bunnyga", "evan_gao", "fourthwallhq", "fu5ha", "isto_inc", "jhortplays", "katiegrayx3", "kittyzea", "linkus7", "mattyro1", "me_jd", "mracres", "negnegtm", "nightbot", "onteia", "scriptdesk", "seek_", "serkian", "skelly57", "stanz", "streamelements", "streamlabs", "sumneer","theandershour", "thomasthegremlin", "vezlaye", "voidmakesvids", "xemdo"};
 	private static StreamStatus streamStatus = StreamStatus.OFFLINE;
 	private static final Logger LOG = LoggerFactory.getLogger(AspectiBot.class);
 	
@@ -453,26 +455,9 @@ public class AspectiBot {
 	public static void whisper(TwitchClient twitchClient, String aspecticorId) {
 		// if a mod in twitch channel whispers bot, send chat to that twitch channel
 		twitchClient.getEventManager().onEvent(PrivateMessageEvent.class, event -> {
-			List<String> mods = null;
-			System.out.print(event.getUser().getName() + " sent " + event.getMessage());
-			try {
-				mods = twitchClient.getMessagingInterface()
-								   .getChatters(ASPECTICOR)
-								   .execute()
-								   .getModerators();
-			} catch (Exception e) {
-			    LOG.error("whisper: Error getting Twitch Moderators!");
-				StringWriter sw = new StringWriter();
-				e.printStackTrace(new PrintWriter(sw));
-				System.err.println(sw.toString());
-			} finally {
-				System.out.println(" " + mods);
-				System.out.println(mods != null);
-				if (mods != null && mods.contains(event.getUser().getName())) {
-
-					System.out.println(twitchClient.getChat().sendMessage(ASPECTICOR, event.getMessage()));
-
-				}
+			List<String> mods = Arrays.asList(modArray);
+			if (mods != null && mods.contains(event.getUser().getName())) {
+				twitchClient.getChat().sendMessage(ASPECTICOR, event.getMessage());
 			}
 		});
 	

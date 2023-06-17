@@ -32,8 +32,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.philippheuer.credentialmanager.domain.OAuth2Credential;
-import com.github.philippheuer.events4j.core.EventManager;
-import com.github.philippheuer.events4j.simple.SimpleEventHandler;
 import com.github.twitch4j.TwitchClient;
 import com.github.twitch4j.TwitchClientBuilder;
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
@@ -118,7 +116,7 @@ public class AspectiBot {
 	}
 
 	private static StreamStatus streamStatus = StreamStatus.OFFLINE;
-	private final static Logger LOG = LoggerFactory.getLogger(AspectiBot.class);
+	private static final Logger LOG = LoggerFactory.getLogger(AspectiBot.class);
 	
 	public static String aspecticorId;
 	public static TwitchClient twitchClient;
@@ -147,23 +145,15 @@ public class AspectiBot {
 		liveIcon = Icon.from(liveFile);
 		offlineIcon = Icon.from(offlineFile);
 
-		// set up Twitch4J
-		EventManager eventManager = new EventManager();
-		eventManager.autoDiscovery();
-		eventManager.setDefaultEventHandler(SimpleEventHandler.class);
-
 		// join Aspecticor's chat
 		OAuth2Credential credential = new OAuth2Credential("twitch", oAuth);
 
 		twitchClient = TwitchClientBuilder.builder()
 				.withEnableHelix(true)
 				.withDefaultAuthToken(credential)
-				.withEventManager(eventManager)
-				.withDefaultEventHandler(SimpleEventHandler.class)
 				.withEnableChat(true)
 				.withChatAccount(credential)
 				.withEnablePubSub(true)
-				.withEnableTMI(true)
 				.build();
 
 		// join Aspect's stream
@@ -171,17 +161,17 @@ public class AspectiBot {
 
 		// Listen to aspecticor's stream
 		twitchClient.getClientHelper().enableStreamEventListener(ASPECTICOR);
-		aspecticorId = twitchClient.getChat().getChannelNameToChannelId().get(ASPECTICOR);
+		aspecticorId = twitchClient.getChat().getChannelNameToChannelId().get(ASPECTICOR); // "275302146"
 		twitchClient.getPubSub().listenForChannelPointsRedemptionEvents(credential, aspecticorId);
 		
 		// if Aspecticor is live change activity and status
 		// also change server icon
-		goLive(eventManager, twitchClient, jda);
+		goLive(twitchClient, jda);
 
 		// if Aspect turns stream off, change icon back and set status to idle.
-		goOffline(eventManager, twitchClient, jda);
+		goOffline(twitchClient, jda);
 
-		whisper(eventManager, twitchClient, aspecticorId);
+		whisper(twitchClient, aspecticorId);
 
 		Map<String, TwitchCommand> commands = new HashMap<>();
 
@@ -198,7 +188,7 @@ public class AspectiBot {
 		commands.put("!twitchemote", new TwitchEmoteCommand());
 
 		// executing commands
-		eventManager.onEvent(ChannelMessageEvent.class, event -> {
+		twitchClient.getEventManager().onEvent(ChannelMessageEvent.class, event -> {
 
 			String cmd = event.getMessage().toLowerCase().split(" ")[0];
 
@@ -216,17 +206,20 @@ public class AspectiBot {
 		});
 
 		// channel point stuff
-		eventManager.onEvent(RewardRedeemedEvent.class, event -> {
-		   
+		twitchClient.getEventManager().onEvent(RewardRedeemedEvent.class, event -> {
+			
 		    ChannelPointsRedemption redeem = event.getRedemption();
 		    String rewardName = redeem.getReward().getTitle();
-		    
+
 		    // ASK THE AI
 		    if(rewardName.equalsIgnoreCase("ASK THE AI")) { 
 		        
 		        String prompt = redeem.getUserInput();
 		        String user = redeem.getUser().getDisplayName();
 		        String answer = "";
+
+				System.out.println(prompt);
+				System.out.println(user);
 		        
 		        while(answer.equalsIgnoreCase("")) {
     		        try {
@@ -241,6 +234,9 @@ public class AspectiBot {
     		            List<CompletionChoice> choices = service.createCompletion(completionRequest).getChoices();
     		            answer = choices.get(AspectiBot.R.nextInt(choices.size())).getText();
     		            String chatResponse = "@" + user + ": " + answer;
+
+						System.out.println(chatResponse);
+
     		            if(chatResponse.length() >= 500) {
     		                twitchClient.getChat().sendMessage(ASPECTICOR, chatResponse.substring(0,495) + "...");
                             break;
@@ -250,6 +246,8 @@ public class AspectiBot {
     		            }	            
     		        } catch(Exception e) {
     		            //do nothing
+						System.out.println(e);
+						break;
     		        }
 		        }
 		        
@@ -259,9 +257,9 @@ public class AspectiBot {
 		
 	} // end of main method
 
-	public static void goLive(EventManager eventManager, TwitchClient twitchClient, JDA jda) {
+	public static void goLive(TwitchClient twitchClient, JDA jda) {
 
-		eventManager.onEvent(ChannelGoLiveEvent.class, event -> {
+		twitchClient.getEventManager().onEvent(ChannelGoLiveEvent.class, event -> {
 			if(streamStatus == StreamStatus.OFFLINE) {
 				streamStatus = StreamStatus.LIVE;
 				jda.getPresence().setStatus(OnlineStatus.ONLINE);
@@ -292,26 +290,26 @@ public class AspectiBot {
 			}
 		});
 		// Update stream info when title is changed
-		eventManager.onEvent(ChannelChangeTitleEvent.class, event -> {
+		twitchClient.getEventManager().onEvent(ChannelChangeTitleEvent.class, event -> {
 			EmbedBuilder newEmbed = formatEmbed(event.getStream());	
 			jda.getNewsChannelById(AspectiBot.LIVE_CHANNEL_ID).editMessageEmbedsById(notificationMessageId, newEmbed.build()).complete();
 		});
 		// Update stream info when game/category is changed
-		eventManager.onEvent(ChannelChangeGameEvent.class, event -> {
+		twitchClient.getEventManager().onEvent(ChannelChangeGameEvent.class, event -> {
 			EmbedBuilder newEmbed = formatEmbed(event.getStream());
 			jda.getNewsChannelById(AspectiBot.LIVE_CHANNEL_ID).editMessageEmbedsById(notificationMessageId, newEmbed.build()).complete();
 		});
 		// Update stream info when viewercount changes
-		eventManager.onEvent(ChannelViewerCountUpdateEvent.class, event -> {
+		twitchClient.getEventManager().onEvent(ChannelViewerCountUpdateEvent.class, event -> {
 			EmbedBuilder newEmbed = formatEmbed(event.getStream());
 			jda.getNewsChannelById(AspectiBot.LIVE_CHANNEL_ID).editMessageEmbedsById(notificationMessageId, newEmbed.build()).complete();
 		});
 
 	}
 
-    public static void goOffline(EventManager eventManager, TwitchClient twitchClient, JDA jda) {
+    public static void goOffline(TwitchClient twitchClient, JDA jda) {
 
-		eventManager.onEvent(ChannelGoOfflineEvent.class, event -> {
+		twitchClient.getEventManager().onEvent(ChannelGoOfflineEvent.class, event -> {
 			streamStatus = StreamStatus.OFFLINE;
 			jda.getPresence().setStatus(OnlineStatus.IDLE);
 			
@@ -452,9 +450,9 @@ public class AspectiBot {
 
 	} // end of goOffline method
 
-	public static void whisper(EventManager eventManager, TwitchClient twitchClient, String aspecticorId) {
+	public static void whisper(TwitchClient twitchClient, String aspecticorId) {
 		// if a mod in twitch channel whispers bot, send chat to that twitch channel
-		eventManager.onEvent(PrivateMessageEvent.class, event -> {
+		twitchClient.getEventManager().onEvent(PrivateMessageEvent.class, event -> {
 			List<String> mods = null;
 			System.out.print(event.getUser().getName() + " sent " + event.getMessage());
 			try {

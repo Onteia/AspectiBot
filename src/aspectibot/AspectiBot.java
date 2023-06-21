@@ -36,6 +36,7 @@ import com.github.philippheuer.credentialmanager.domain.OAuth2Credential;
 import com.github.twitch4j.TwitchClient;
 import com.github.twitch4j.TwitchClientBuilder;
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
+import com.github.twitch4j.chat.events.channel.RaidEvent;
 import com.github.twitch4j.common.events.user.PrivateMessageEvent;
 import com.github.twitch4j.common.util.CryptoUtils;
 import com.github.twitch4j.events.ChannelChangeGameEvent;
@@ -258,6 +259,14 @@ public class AspectiBot {
 				
 			}
 			
+		});
+
+		// on raid
+		twitchClient.getEventManager().onEvent(RaidEvent.class, event -> {
+			String raiderId = event.getRaider().getId();
+			// send shoutout event
+			twitchClient.getHelix().sendShoutout(oAuth, aspecticorId, raiderId, aspecticorId);
+			twitchClient.getChat().sendMessage(ASPECTICOR, "!so " + event.getRaider().getName());
 		});
 
         LOG.info("AspectiBot Started!");

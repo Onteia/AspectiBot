@@ -48,9 +48,10 @@ import com.github.twitch4j.helix.domain.Stream;
 import com.github.twitch4j.helix.domain.Video;
 import com.github.twitch4j.pubsub.domain.ChannelPointsRedemption;
 import com.github.twitch4j.pubsub.events.RewardRedeemedEvent;
-import com.theokanning.openai.OpenAiService;
-import com.theokanning.openai.completion.CompletionChoice;
-import com.theokanning.openai.completion.CompletionRequest;
+import com.theokanning.openai.completion.chat.ChatCompletionChoice;
+import com.theokanning.openai.completion.chat.ChatCompletionRequest;
+import com.theokanning.openai.completion.chat.ChatMessage;
+import com.theokanning.openai.service.OpenAiService;
 
 import commands.BrainpowerCommand;
 import commands.ClipCommand;
@@ -217,6 +218,7 @@ public class AspectiBot {
 			
 			ChannelPointsRedemption redeem = event.getRedemption();
 			String rewardName = redeem.getReward().getTitle();
+			LOG.info("{} redeemed {}!", redeem.getUser().getDisplayName(), rewardName);
 
 			// ASK THE AI
 			if(rewardName.equalsIgnoreCase("ASK THE AI")) { 
@@ -227,32 +229,31 @@ public class AspectiBot {
 
                 LOG.info("AI question asked by {}: {}", user, prompt);
 				
-				while(answer.equalsIgnoreCase("")) {
+				while (answer.equalsIgnoreCase("")) {
 					try {
-						// Generate a GPT3 response from twitch chat question
+						// Generate a GPT3.5 response from twitch chat question
+						List<ChatMessage> messages = Arrays.asList(new ChatMessage("user", prompt, user));
 						OpenAiService service = new OpenAiService(opnAI);
-						CompletionRequest completionRequest = CompletionRequest.builder()
-								.prompt(prompt)
-								.model("text-davinci-003")
+						ChatCompletionRequest chatCompletionRequest = ChatCompletionRequest.builder()
+								.messages(messages)
+								.model("gpt-3.5-turbo")
 								.maxTokens(300)
-								.echo(false)
 								.build();
-						List<CompletionChoice> choices = service.createCompletion(completionRequest).getChoices();
-						answer = choices.get(AspectiBot.R.nextInt(choices.size())).getText();
+						List<ChatCompletionChoice> choices = service.createChatCompletion(chatCompletionRequest).getChoices();
+						answer = choices.get(AspectiBot.R.nextInt(choices.size())).getMessage().getContent();
 						String chatResponse = "@" + user + ": " + answer;
 
 						LOG.info("AI response: {}", chatResponse);
 
 						if(chatResponse.length() >= 500) {
 							twitchClient.getChat().sendMessage(ASPECTICOR, chatResponse.substring(0,495) + "...");
-							break;
 						} else {
 							twitchClient.getChat().sendMessage(ASPECTICOR, chatResponse);
-							break;
 						}	            
 					} catch(Exception e) {
 						//do nothing
 						LOG.error("AI error: {}", e.getMessage());
+						e.printStackTrace();
 						break;
 					}
 				}

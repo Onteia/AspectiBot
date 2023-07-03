@@ -264,10 +264,23 @@ public class AspectiBot {
 
 		// on raid
 		twitchClient.getEventManager().onEvent(RaidEvent.class, event -> {
+			if (event.getViewers() < 10) {
+				twitchClient.getChat()
+							.sendMessage(ASPECTICOR, "!so " + event.getRaider().getName());
+				return;
+			}
 			String raiderId = event.getRaider().getId();
 			// send shoutout event
-			twitchClient.getHelix().sendShoutout(oAuth, aspecticorId, raiderId, aspecticorId);
-			twitchClient.getChat().sendMessage(ASPECTICOR, "!so " + event.getRaider().getName());
+			try {
+				twitchClient.getHelix()
+							.sendShoutout(oAuth, aspecticorId, raiderId, aspecticorId)
+							.execute();
+			} catch (Exception e) {
+				LOG.error("Unable to send shoutout to {}!", event.getRaider().getName());
+				e.printStackTrace();
+			}
+			twitchClient.getChat()
+						.sendMessage(ASPECTICOR, "!so " + event.getRaider().getName());
 		});
 
         LOG.info("AspectiBot Started!");

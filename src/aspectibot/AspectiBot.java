@@ -10,8 +10,6 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -53,7 +51,6 @@ import com.theokanning.openai.completion.chat.ChatCompletionRequest;
 import com.theokanning.openai.completion.chat.ChatMessage;
 import com.theokanning.openai.service.OpenAiService;
 
-import commands.BrainpowerCommand;
 import commands.ClipCommand;
 import commands.EmotesCommand;
 import commands.LeaderboardCommand;
@@ -183,7 +180,6 @@ public class AspectiBot {
 
 		Map<String, TwitchCommand> commands = new HashMap<>();
 
-		commands.put("!brainpower", new BrainpowerCommand());
 		commands.put("!emotes", new EmotesCommand());
 		commands.put("!leaderboards", new LeaderboardCommand());
 		commands.put("!lurk", new LurkCommand());

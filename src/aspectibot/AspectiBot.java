@@ -117,7 +117,7 @@ public class AspectiBot {
 		OFFLINE;
 	}
 
-	private static String[] modArray = {"aspectibot", "atlae99", "b00kitten", "botspecticor", "brenroarn", "bunnyga", "evan_gao", "fourthwallhq", "fu5ha", "isto_inc", "jhortplays", "katiegrayx3", "kittyzea", "linkus7", "mattyro1", "me_jd", "mracres", "negnegtm", "nightbot", "onteia", "scriptdesk", "seek_", "serkian", "skelly57", "stanz", "streamelements", "streamlabs", "sumneer","theandershour", "thomasthegremlin", "vezlaye", "voidmakesvids", "xemdo"};
+	private static String[] modArray = {"aspectibot", "atlae99", "b00kitten", "botspecticor", "brenroarn", "bunnyga", "evan_gao", "fourthwallhq", "fu5ha", "isto_inc", "katiegrayx3", "kittyzea", "linkus7", "mattyro1", "me_jd", "mracres", "negnegtm", "nightbot", "onteia", "scriptdesk", "seek_", "serkian", "skelly57", "stanz", "streamelements", "streamlabs", "sumneer","theandershour", "thomasthegremlin", "vezlaye", "voidmakesvids", "xemdo"};
 	private static StreamStatus streamStatus = StreamStatus.OFFLINE;
 	private static final Logger LOG = LoggerFactory.getLogger(AspectiBot.class);
 	
@@ -285,26 +285,26 @@ public class AspectiBot {
 
 	public static void goLive(TwitchClient twitchClient, JDA jda) {
 
+        Guild server = jda.getGuildById(SERVER_ID);
         NewsChannel newsChannel = jda.getNewsChannelById(AspectiBot.LIVE_CHANNEL_ID);
-        if (newsChannel == null){
+		      
+        if(server == null) {
+            LOG.error("goLive: Unable to get server! Server ID: " + SERVER_ID);
+			return;
+		}
+        if(newsChannel == null) {
             LOG.error("goLive: Unable to get news channel! Channel ID: " + AspectiBot.LIVE_CHANNEL_ID);
             return;
         }
 
 		twitchClient.getEventManager().onEvent(ChannelGoLiveEvent.class, event -> {
-			if (streamStatus == StreamStatus.OFFLINE) {
+			if(streamStatus == StreamStatus.OFFLINE) {
 				streamStatus = StreamStatus.LIVE;
 				jda.getPresence().setStatus(OnlineStatus.ONLINE);
 				jda.getPresence().setActivity(Activity.watching("Aspecticor's Stream"));
 				
 				// change icon to Live version
-                Guild server = jda.getGuildById(SERVER_ID);
-
-                if (server == null)
-                    // ngl if you somehow throw this error and newsChannel isn't null, I'm impressed
-                    LOG.error("goLive: Unable to get server! Server ID: " + SERVER_ID);
-                else
-                    server.getManager().setIcon(liveIcon).queue();
+                server.getManager().setIcon(liveIcon).queue();
 				
 				EmbedBuilder goLiveEmbed = formatEmbed(event.getStream());
                 Message streamNotificationMessage = newsChannel.sendMessage("<@&"+ PING_ROLE +"> HE'S LIVE!!!")
@@ -346,23 +346,23 @@ public class AspectiBot {
 	}
 
     public static void goOffline(TwitchClient twitchClient, JDA jda) {
+		Guild server = jda.getGuildById(SERVER_ID);
+		if(server == null) {
+			LOG.error("goOffline: Unable to get server! Server ID: " + SERVER_ID);
+			return;
+		}
 
 		twitchClient.getEventManager().onEvent(ChannelGoOfflineEvent.class, event -> {
+			LOG.info("goOffline: aspecticor went offline!");
 			streamStatus = StreamStatus.OFFLINE;
 			jda.getPresence().setStatus(OnlineStatus.IDLE);
 			
 			// change icon to Offline version
-            Guild server = jda.getGuildById(SERVER_ID);
-            if (server == null) {
-                LOG.error("goOffline: Unable to get server! Server ID: " + SERVER_ID);
-                return;
-            } else {
-                server.getManager().setIcon(offlineIcon).queue();
-			}
+            server.getManager().setIcon(offlineIcon).queue();
 
 			//credit: https://whaa.dev/how-to-generate-random-characters-in-java
 			StringBuilder randomKey = new StringBuilder();
-			for (int i = 0; i < 30; i++) {
+			for(int i = 0; i < 30; i++) {
 				char randomCharacter = (char)((R.nextBoolean() ? 'a' : 'A') + R.nextInt(26));
 				randomKey.append(randomCharacter);
 			}

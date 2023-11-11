@@ -1,4 +1,4 @@
-package commands;
+package twitch_commands;
 
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
 

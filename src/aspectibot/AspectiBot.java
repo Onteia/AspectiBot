@@ -51,16 +51,6 @@ import com.theokanning.openai.completion.chat.ChatCompletionRequest;
 import com.theokanning.openai.completion.chat.ChatMessage;
 import com.theokanning.openai.service.OpenAiService;
 
-import commands.ClipCommand;
-import commands.EmotesCommand;
-import commands.LeaderboardCommand;
-import commands.LogAddCommand;
-import commands.LogDeleteCommand;
-import commands.LogEditCommand;
-import commands.LogShowCommand;
-import commands.LurkCommand;
-import commands.TwitchEmoteCommand;
-import commands.TwitterCommand;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
@@ -74,6 +64,16 @@ import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.FileUpload;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
+import twitch_commands.ClipCommand;
+import twitch_commands.EmotesCommand;
+import twitch_commands.LeaderboardCommand;
+import twitch_commands.LogAddCommand;
+import twitch_commands.LogDeleteCommand;
+import twitch_commands.LogEditCommand;
+import twitch_commands.LogShowCommand;
+import twitch_commands.LurkCommand;
+import twitch_commands.TwitchEmoteCommand;
+import twitch_commands.TwitterCommand;
 
 public class AspectiBot {
 	
@@ -298,6 +298,7 @@ public class AspectiBot {
         }
 
 		twitchClient.getEventManager().onEvent(ChannelGoLiveEvent.class, event -> {
+            LOG.info(ASPECTICOR + " went live!");				
 			if(streamStatus == StreamStatus.OFFLINE) {
 				streamStatus = StreamStatus.LIVE;
 				jda.getPresence().setStatus(OnlineStatus.ONLINE);
@@ -324,7 +325,6 @@ public class AspectiBot {
                     LOG.error("goLive: Unable to create save file for the message ID");
                     e.printStackTrace();
                 }
-                LOG.info(ASPECTICOR + " went live!");				
 			}
 		});
 		// Update stream info when title is changed
@@ -353,7 +353,7 @@ public class AspectiBot {
 		}
 
 		twitchClient.getEventManager().onEvent(ChannelGoOfflineEvent.class, event -> {
-			LOG.info("goOffline: aspecticor went offline!");
+			LOG.info(ASPECTICOR + " went offline!");
 			streamStatus = StreamStatus.OFFLINE;
 			jda.getPresence().setStatus(OnlineStatus.IDLE);
 			
@@ -383,8 +383,6 @@ public class AspectiBot {
             } finally {
                 notificationMessageId = "";
             }
-			
-			LOG.info(ASPECTICOR + " went offline!");
 		});
 
 	} // end of goOffline method

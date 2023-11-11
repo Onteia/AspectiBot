@@ -1,4 +1,4 @@
-package commands;
+package twitch_commands;
 
 import java.io.IOException;
 import java.util.Set;
@@ -12,33 +12,25 @@ import com.github.twitch4j.common.enums.CommandPermission;
 import aspectibot.TwitchCommand;
 import utils.CommandLog;
 
-public class LogEditCommand implements TwitchCommand {
+public class LogDeleteCommand implements TwitchCommand {
 
-    private final Logger LOG = LoggerFactory.getLogger(LogEditCommand.class);
+    private final Logger LOG = LoggerFactory.getLogger(LogDeleteCommand.class);
     
 	public String response(ChannelMessageEvent event) {
 		String[] message = event.getMessage().split(" ");
 		Set<CommandPermission> perms = event.getPermissions();
 		
 		if(perms.contains(CommandPermission.BROADCASTER) || perms.contains(CommandPermission.MODERATOR)) {
-			String command_name = "INIT";
-			
-			for(int i = 1; i < message.length; i++) {
-				if(message[i].substring(0, 1).equalsIgnoreCase("!")) {
-					command_name = message[i];
-					break;
-				}
-			}
-			
+			if(message.length <= 1)
+			    return "";
 			try {	
-			    CommandLog.edit(command_name, event.getMessage());
+				CommandLog.delete(message[1]);
 				return "";
 			} catch(IOException e) {
-			    LOG.error("response: Unable to edit " + command_name + "!");
+			    LOG.error("response: Unable to delete " + message[1] + " from the json!");
 				return "";
 			}
 		}
-		
 		return "";
 	}
 

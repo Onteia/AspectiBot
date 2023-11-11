@@ -1,4 +1,4 @@
-package commands;
+package twitch_commands;
 
 import java.io.IOException;
 import java.util.Set;

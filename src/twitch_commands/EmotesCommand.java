@@ -1,14 +1,14 @@
-package commands;
+package twitch_commands;
 
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
 
 import aspectibot.TwitchCommand;
 
-public class LurkCommand implements TwitchCommand {
+public class EmotesCommand implements TwitchCommand {
 
 	public String response(ChannelMessageEvent event) {
 		
-		return "Thank you for lurking, " + event.getUser().getName() + "! Homi";
+		return "If you're not able to see all emotes, get the BTTV, FFZ, and 7TV extensions!";
 		
 	}
 	

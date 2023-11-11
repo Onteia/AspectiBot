@@ -1,4 +1,4 @@
-package commands;
+package twitch_commands;
 
 import java.util.List;
 import java.util.stream.Stream;

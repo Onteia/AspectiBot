@@ -10,8 +10,6 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -53,17 +51,6 @@ import com.theokanning.openai.completion.chat.ChatCompletionRequest;
 import com.theokanning.openai.completion.chat.ChatMessage;
 import com.theokanning.openai.service.OpenAiService;
 
-import commands.BrainpowerCommand;
-import commands.ClipCommand;
-import commands.EmotesCommand;
-import commands.LeaderboardCommand;
-import commands.LogAddCommand;
-import commands.LogDeleteCommand;
-import commands.LogEditCommand;
-import commands.LogShowCommand;
-import commands.LurkCommand;
-import commands.TwitchEmoteCommand;
-import commands.TwitterCommand;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
@@ -77,6 +64,16 @@ import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.FileUpload;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
+import twitch_commands.ClipCommand;
+import twitch_commands.EmotesCommand;
+import twitch_commands.LeaderboardCommand;
+import twitch_commands.LogAddCommand;
+import twitch_commands.LogDeleteCommand;
+import twitch_commands.LogEditCommand;
+import twitch_commands.LogShowCommand;
+import twitch_commands.LurkCommand;
+import twitch_commands.TwitchEmoteCommand;
+import twitch_commands.TwitterCommand;
 
 public class AspectiBot {
 	
@@ -120,7 +117,7 @@ public class AspectiBot {
 		OFFLINE;
 	}
 
-	private static String[] modArray = {"aspectibot", "atlae99", "b00kitten", "botspecticor", "brenroarn", "bunnyga", "evan_gao", "fourthwallhq", "fu5ha", "isto_inc", "jhortplays", "katiegrayx3", "kittyzea", "linkus7", "mattyro1", "me_jd", "mracres", "negnegtm", "nightbot", "onteia", "scriptdesk", "seek_", "serkian", "skelly57", "stanz", "streamelements", "streamlabs", "sumneer","theandershour", "thomasthegremlin", "vezlaye", "voidmakesvids", "xemdo"};
+	private static String[] modArray = {"aspectibot", "atlae99", "b00kitten", "botspecticor", "brenroarn", "bunnyga", "evan_gao", "fourthwallhq", "fu5ha", "isto_inc", "katiegrayx3", "kittyzea", "linkus7", "mattyro1", "me_jd", "mracres", "negnegtm", "nightbot", "onteia", "scriptdesk", "seek_", "serkian", "skelly57", "stanz", "streamelements", "streamlabs", "sumneer","theandershour", "thomasthegremlin", "vezlaye", "voidmakesvids", "xemdo"};
 	private static StreamStatus streamStatus = StreamStatus.OFFLINE;
 	private static final Logger LOG = LoggerFactory.getLogger(AspectiBot.class);
 	
@@ -183,7 +180,6 @@ public class AspectiBot {
 
 		Map<String, TwitchCommand> commands = new HashMap<>();
 
-		commands.put("!brainpower", new BrainpowerCommand());
 		commands.put("!emotes", new EmotesCommand());
 		commands.put("!leaderboards", new LeaderboardCommand());
 		commands.put("!lurk", new LurkCommand());
@@ -289,26 +285,27 @@ public class AspectiBot {
 
 	public static void goLive(TwitchClient twitchClient, JDA jda) {
 
+        Guild server = jda.getGuildById(SERVER_ID);
         NewsChannel newsChannel = jda.getNewsChannelById(AspectiBot.LIVE_CHANNEL_ID);
-        if (newsChannel == null){
+		      
+        if(server == null) {
+            LOG.error("goLive: Unable to get server! Server ID: " + SERVER_ID);
+			return;
+		}
+        if(newsChannel == null) {
             LOG.error("goLive: Unable to get news channel! Channel ID: " + AspectiBot.LIVE_CHANNEL_ID);
             return;
         }
 
 		twitchClient.getEventManager().onEvent(ChannelGoLiveEvent.class, event -> {
-			if (streamStatus == StreamStatus.OFFLINE) {
+            LOG.info(ASPECTICOR + " went live!");				
+			if(streamStatus == StreamStatus.OFFLINE) {
 				streamStatus = StreamStatus.LIVE;
 				jda.getPresence().setStatus(OnlineStatus.ONLINE);
 				jda.getPresence().setActivity(Activity.watching("Aspecticor's Stream"));
 				
 				// change icon to Live version
-                Guild server = jda.getGuildById(SERVER_ID);
-
-                if (server == null)
-                    // ngl if you somehow throw this error and newsChannel isn't null, I'm impressed
-                    LOG.error("goLive: Unable to get server! Server ID: " + SERVER_ID);
-                else
-                    server.getManager().setIcon(liveIcon).queue();
+                server.getManager().setIcon(liveIcon).queue();
 				
 				EmbedBuilder goLiveEmbed = formatEmbed(event.getStream());
                 Message streamNotificationMessage = newsChannel.sendMessage("<@&"+ PING_ROLE +"> HE'S LIVE!!!")
@@ -328,7 +325,6 @@ public class AspectiBot {
                     LOG.error("goLive: Unable to create save file for the message ID");
                     e.printStackTrace();
                 }
-                LOG.info(ASPECTICOR + " went live!");				
 			}
 		});
 		// Update stream info when title is changed
@@ -350,52 +346,21 @@ public class AspectiBot {
 	}
 
     public static void goOffline(TwitchClient twitchClient, JDA jda) {
+		Guild server = jda.getGuildById(SERVER_ID);
+		if(server == null) {
+			LOG.error("goOffline: Unable to get server! Server ID: " + SERVER_ID);
+			return;
+		}
 
 		twitchClient.getEventManager().onEvent(ChannelGoOfflineEvent.class, event -> {
+			LOG.info(ASPECTICOR + " went offline!");
 			streamStatus = StreamStatus.OFFLINE;
 			jda.getPresence().setStatus(OnlineStatus.IDLE);
 			
 			// change icon to Offline version
-            Guild server = jda.getGuildById(SERVER_ID);
-            if (server == null) {
-                LOG.error("goOffline: Unable to get server! Server ID: " + SERVER_ID);
-                return;
-            } else {
-                server.getManager().setIcon(offlineIcon).queue();
-			}
+            server.getManager().setIcon(offlineIcon).queue();
 
-			//credit: https://whaa.dev/how-to-generate-random-characters-in-java
-			StringBuilder randomKey = new StringBuilder();
-			for (int i = 0; i < 30; i++) {
-				char randomCharacter = (char)((R.nextBoolean() ? 'a' : 'A') + R.nextInt(26));
-				randomKey.append(randomCharacter);
-			}
-			
-			String fakeKey = "live_" + R.nextInt(1000000000) + "_" + randomKey.toString();
-			String[] randResponses = {"Aspecticor's VODS", "Aspecticor's Clips",
-					"Aspecticor's YT Videos", "Aspecticor's TikToks", 
-					"Aspecticor get cancelled on Twitter",
-					"Aspecticor die of liver failure", "Aspecticor's TED Talk", 
-					"Aspecticor's Brentwood College School Musical Performance",
-					"Aspecticor's WACK ASS NAILS grow", "Aspecticor do a flip", 
-					"Aspecticor falling into the toilet yet again", 
-					"chaos ensue on Aspecticor's dying Subreddit", 
-					"Aspecticor going back to Paris",
-					"Aspecticor's mouse get stolen by Hitman again", 
-					"an NPC catch Aspecticor's heinous crimes",
-					"Aspecticor's bi flag get torn down by Mercs", 
-					"Aspecticor and Katie's DNA tests being a direct match",
-					"Aspecticor go live without looking at his DMs", 
-					"Soylent Splive believe in yet another conspiracy theory",
-					"Aspecticor watch 'cutscenes'", "Mercs assault the top of Aspecticor's chair", 
-					"Mercs do a WICKED jump", "Aspecticor leak his stream key: " + fakeKey};
-			String response = randResponses[R.nextInt(randResponses.length)];
-			// null safety
-			if(response != null) {
-				jda.getPresence().setActivity(Activity.watching(response));
-			} else {
-				LOG.error("goOffline: Offline status response is null!");
-			}
+			jda.getPresence().setActivity(Activity.watching("Aspect's VODs"));
 			
 			List<Video> vodList = twitchClient.getHelix()
                     .getVideos(
@@ -418,8 +383,6 @@ public class AspectiBot {
             } finally {
                 notificationMessageId = "";
             }
-			
-			LOG.info(ASPECTICOR + " went offline!");
 		});
 
 	} // end of goOffline method

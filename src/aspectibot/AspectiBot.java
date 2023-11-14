@@ -178,36 +178,7 @@ public class AspectiBot {
 
 		whisper(twitchClient);
 
-		Map<String, TwitchCommand> commands = new HashMap<>();
-
-		commands.put("!emotes", new EmotesCommand());
-		commands.put("!leaderboards", new LeaderboardCommand());
-		commands.put("!lurk", new LurkCommand());
-		commands.put("!twitter", new TwitterCommand());
-		commands.put("!addcom", new LogAddCommand());
-		commands.put("!showcom", new LogShowCommand());
-		commands.put("!delcom", new LogDeleteCommand());
-		commands.put("!editcom", new LogEditCommand());
-		commands.put("!clip", new ClipCommand());
-		commands.put("!twitchemote", new TwitchEmoteCommand());
-
-		// executing commands
-		twitchClient.getEventManager().onEvent(ChannelMessageEvent.class, event -> {
-
-			String cmd = event.getMessage().toLowerCase().split(" ")[0];
-
-			TwitchCommand command;
-			
-			if ((command = commands.get(cmd)) != null) { 
-				// if the input is in the hashmap
-				
-				twitchClient.getChat().sendMessage(
-					ASPECTICOR, command.response(event), 
-					"", event.getMessageEvent().getMessageId().get()); 
-					// post the proper response
-			}
-
-		});
+		registerTwitchCommands();
 
 		// channel point stuff
 		twitchClient.getEventManager().onEvent(RewardRedeemedEvent.class, event -> {
@@ -479,7 +450,7 @@ public class AspectiBot {
         }
     } // end of createVodThumbnail method
 
-public static void whisper(TwitchClient twitchClient) {
+	public static void whisper(TwitchClient twitchClient) {
 		// if a mod in twitch channel whispers bot, send chat to that twitch channel
 		twitchClient.getEventManager().onEvent(PrivateMessageEvent.class, event -> {
 			List<String> mods = Arrays.asList(modArray);
@@ -607,6 +578,39 @@ public static void whisper(TwitchClient twitchClient) {
 			LOG.error("loadCredentials: Authentication Failed!");
 		}
 		
+	}
+
+	public static void registerTwitchCommands() {
+		Map<String, TwitchCommand> commands = new HashMap<>();
+
+		commands.put("!emotes", new EmotesCommand());
+		commands.put("!leaderboards", new LeaderboardCommand());
+		commands.put("!lurk", new LurkCommand());
+		commands.put("!twitter", new TwitterCommand());
+		commands.put("!addcom", new LogAddCommand());
+		commands.put("!showcom", new LogShowCommand());
+		commands.put("!delcom", new LogDeleteCommand());
+		commands.put("!editcom", new LogEditCommand());
+		commands.put("!clip", new ClipCommand());
+		commands.put("!twitchemote", new TwitchEmoteCommand());
+
+		// executing commands
+		twitchClient.getEventManager().onEvent(ChannelMessageEvent.class, event -> {
+
+			String cmd = event.getMessage().toLowerCase().split(" ")[0];
+
+			TwitchCommand command;
+			
+			if ((command = commands.get(cmd)) != null) { 
+				
+				twitchClient.getChat().sendMessage(
+					ASPECTICOR, command.response(event), 
+					"", event.getMessageEvent().getMessageId().get()
+				); 
+			}
+
+		});
+
 	}
 
 }

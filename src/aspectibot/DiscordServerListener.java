@@ -1,10 +1,13 @@
 package aspectibot;
 
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import discord_commands.BirthdayCommand;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -13,14 +16,41 @@ import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
+import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.interactions.commands.build.CommandData;
+import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 
 
 public class DiscordServerListener extends ListenerAdapter {
 
     private static final Logger LOG = LoggerFactory.getLogger(DiscordServerListener.class);
+	   
+	public void onReady(ReadyEvent event) {
+		//register slash commands
+		ArrayList<CommandData> commands = new ArrayList<>();
+		commands.add(new BirthdayCommand().register());
+
+		event.getJDA().updateCommands().addCommands(commands).queue();
+	}
+
+	@Override
+	public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
+		String command = event.getName();
+		// use value of command to get proper response
+		// use something related to MessageCreateData or MessageCreateBuilder
+		HashMap<String, DiscordCommand> commands = new HashMap<>();
+		commands.put("birthday", new BirthdayCommand());
+
+		DiscordCommand cmd;
+		if((cmd = commands.get(command)) != null) {
+			MessageCreateData data = cmd.reply();
+			event.reply(data).queue();
+		}
+	}
     
 	@Override
 	public void onMessageReceived(MessageReceivedEvent event) {

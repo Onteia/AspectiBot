@@ -28,25 +28,21 @@ import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 public class DiscordServerListener extends ListenerAdapter {
 
     private static final Logger LOG = LoggerFactory.getLogger(DiscordServerListener.class);
+	private HashMap<String, DiscordCommand> commandMap = new HashMap<>();
 	   
 	public void onReady(ReadyEvent event) {
 		//register slash commands
 		ArrayList<CommandData> commands = new ArrayList<>();
 		commands.add(new BirthdayCommand().register());
-
+		commandMap.put("birthday", new BirthdayCommand());
+	
 		event.getJDA().updateCommands().addCommands(commands).queue();
 	}
 
 	@Override
 	public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
-		String command = event.getName();
-		// use value of command to get proper response
-		// use something related to MessageCreateData or MessageCreateBuilder
-		HashMap<String, DiscordCommand> commands = new HashMap<>();
-		commands.put("birthday", new BirthdayCommand());
-
 		DiscordCommand cmd;
-		if((cmd = commands.get(command)) != null) {
+		if((cmd = commandMap.get(event.getName())) != null) {
 			MessageCreateData data = cmd.reply();
 			event.reply(data).queue();
 		}

@@ -2,6 +2,8 @@ package discord_commands;
 
 import java.io.IOException;
 
+import javax.management.openmbean.KeyAlreadyExistsException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,15 +56,23 @@ public class BirthdayCommand implements DiscordCommand {
             month = event.getOption("month").getAsString();
             day = event.getOption("day").getAsInt();
             userID = event.getUser().getId();
-            JSONUtils.add(userID, month+","+day, AspectiBot.BIRTHDAY_LOG_PATH);
         } catch(IllegalArgumentException e) {
             LOG.error("reply: unable to get command option!", e);
             return error();
-        } catch(IOException e) {
-            LOG.error("reply: unable to add birthday to json file!");
-            return error();
         }
         
+        try {
+            JSONUtils.add(userID, month+","+day, AspectiBot.BIRTHDAY_LOG_PATH);
+        } catch(KeyAlreadyExistsException e) {
+            try {
+                JSONUtils.edit(userID, month+","+day, AspectiBot.BIRTHDAY_LOG_PATH);
+            } catch(IOException e2) {
+                LOG.error("reply: unable to edit birthday in json file!", e2);
+            }
+        } catch(IOException e) {
+            LOG.error("reply: unable to add birthday to json file!", e);
+            return error();
+        }
         
         MessageCreateBuilder message = new MessageCreateBuilder();
         message.setContent("added your birthday!");

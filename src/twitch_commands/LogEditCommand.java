@@ -9,8 +9,9 @@ import org.slf4j.LoggerFactory;
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
 import com.github.twitch4j.common.enums.CommandPermission;
 
+import aspectibot.AspectiBot;
 import aspectibot.TwitchCommand;
-import utils.CommandLog;
+import utils.JSONUtils;
 
 public class LogEditCommand implements TwitchCommand {
 
@@ -31,7 +32,7 @@ public class LogEditCommand implements TwitchCommand {
 			}
 			
 			try {	
-			    CommandLog.edit(command_name, event.getMessage());
+			    JSONUtils.edit(command_name, event.getMessage(), AspectiBot.COMMAND_LOG_PATH);
 				return "";
 			} catch(IOException e) {
 			    LOG.error("response: Unable to edit " + command_name + "!");

@@ -9,8 +9,9 @@ import org.slf4j.LoggerFactory;
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
 import com.github.twitch4j.common.enums.CommandPermission;
 
+import aspectibot.AspectiBot;
 import aspectibot.TwitchCommand;
-import utils.CommandLog;
+import utils.JSONUtils;
 
 public class LogAddCommand implements TwitchCommand {
 
@@ -31,8 +32,7 @@ public class LogAddCommand implements TwitchCommand {
 			}
 			
 			try {			
-			    CommandLog.add(command_name, event.getMessage());
-			    
+			    JSONUtils.add(command_name, event.getMessage(), AspectiBot.COMMAND_LOG_PATH);
 			} catch(IOException e) {
 			    LOG.error("response: Unable to add " + command_name + " to the json file!");
 				return "@Onteia you fucked up again! Madge";

@@ -54,7 +54,7 @@ public class BirthdayCommand implements DiscordCommand {
             month = event.getOption("month").getAsString();
             day = event.getOption("day").getAsInt();
             userID = event.getUser().getId();
-            JSONUtils.add(userID, month, AspectiBot.BIRTHDAY_LOG_PATH);
+            JSONUtils.add(userID, month+","+day, AspectiBot.BIRTHDAY_LOG_PATH);
         } catch(IllegalArgumentException e) {
             LOG.error("reply: unable to get command option!", e);
             return error();

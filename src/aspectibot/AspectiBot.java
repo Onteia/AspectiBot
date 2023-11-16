@@ -86,6 +86,7 @@ public class AspectiBot {
 	private static String LIVE_ICON_PATH;
 	private static String OFFLINE_ICON_PATH;
 	public static String COMMAND_LOG_PATH;
+	public static String BIRTHDAY_LOG_PATH;
 	private static String THIS_FOLDER_PATH;
 	
 	/* Aspecticord settings */
@@ -538,6 +539,7 @@ public class AspectiBot {
             LIVE_ICON_PATH = prop.getProperty("LIVE_ICON_PATH");
             OFFLINE_ICON_PATH = prop.getProperty("OFFLINE_ICON_PATH");
             COMMAND_LOG_PATH = prop.getProperty("COMMAND_LOG_PATH");
+			BIRTHDAY_LOG_PATH = prop.getProperty("BIRTHDAY_LOG_PATH");
             THIS_FOLDER_PATH = prop.getProperty("THIS_FOLDER_PATH");
         } catch (FileNotFoundException e) {
             //no config file
@@ -546,7 +548,8 @@ public class AspectiBot {
             OPEN_AI_TOKEN_PATH = "/home/orangepi/jars/persistent/openAiToken.txt";
             LIVE_ICON_PATH = "/home/orangepi/jars/persistent/Aspecticor_Live.png";
             OFFLINE_ICON_PATH = "/home/orangepi/jars/persistent/Aspecticor_Offline.png";
-            COMMAND_LOG_PATH = "/home/orangepi/jars/AspectiBot/src/commands/commands.json";
+            COMMAND_LOG_PATH = "/home/orangepi/jars/AspectiBot/src/twitch_commands/commands.json";
+			BIRTHDAY_LOG_PATH = "/home/orangepi/jars/AspectiBot/src/discord_commands/birthdays.json";
             THIS_FOLDER_PATH = "/home/orangepi/jars/AspectiBot/";
         } catch (IOException e1) {
             LOG.error("loadConfig: IOException on loading config file!");

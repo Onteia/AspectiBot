@@ -1,14 +1,24 @@
 package discord_commands;
 
+import java.io.IOException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import aspectibot.AspectiBot;
 import aspectibot.DiscordCommand;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import net.dv8tion.jda.api.utils.messages.MessageCreateData;
+import utils.JSONUtils;
 
 public class BirthdayCommand implements DiscordCommand {
+
+    private static final Logger LOG = LoggerFactory.getLogger(BirthdayCommand.class);
 
     @Override
     public CommandData register() {
@@ -36,10 +46,32 @@ public class BirthdayCommand implements DiscordCommand {
     }
 
     @Override
-    public MessageCreateData reply() {
+    public MessageCreateData reply(SlashCommandInteractionEvent event) {
+        String month;
+        int day;
+        String userID;
+        try {
+            month = event.getOption("month").getAsString();
+            day = event.getOption("day").getAsInt();
+            userID = event.getUser().getId();
+            JSONUtils.add(userID, month, AspectiBot.BIRTHDAY_LOG_PATH);
+        } catch(IllegalArgumentException e) {
+            LOG.error("reply: unable to get command option!", e);
+            return error();
+        } catch(IOException e) {
+            LOG.error("reply: unable to add birthday to json file!");
+            return error();
+        }
+        
         
         MessageCreateBuilder message = new MessageCreateBuilder();
         message.setContent("added your birthday!");
+        return message.build();
+    }
+    
+    private static MessageCreateData error() {
+        MessageCreateBuilder message = new MessageCreateBuilder()
+            .setContent("unable to process your request, try again later! (also blame onteia)");
         return message.build();
     }
     

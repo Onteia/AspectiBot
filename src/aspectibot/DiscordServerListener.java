@@ -43,7 +43,7 @@ public class DiscordServerListener extends ListenerAdapter {
 	public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
 		DiscordCommand cmd;
 		if((cmd = commandMap.get(event.getName())) != null) {
-			MessageCreateData data = cmd.reply();
+			MessageCreateData data = cmd.reply(event);
 			event.reply(data).queue();
 		}
 	}

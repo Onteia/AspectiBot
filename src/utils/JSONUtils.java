@@ -30,12 +30,24 @@ public class JSONUtils {
         json.put(key, value);
         writeJSON(json, jsonPath);
     }
+
+    public static void addArray(String key, JSONArray value, String jsonPath) throws IOException {
+        JSONObject json = readJSON(jsonPath);
+        json.put(key, value);
+        writeJSON(json, jsonPath);
+    }
     
     public static void delete(String key, String jsonPath) throws IOException {
         JSONObject json = readJSON(jsonPath);
         Object result = json.remove(key);
         if(result != null)
             writeJSON(json, jsonPath);
+    }
+    
+    public static void put(String key, String value, String jsonPath) throws IOException {
+        JSONObject json = readJSON(jsonPath);
+        json.put(key, value);
+        writeJSON(json, jsonPath);
     }
     
     public static void edit(String key, String value, String jsonPath) throws IOException {
@@ -50,13 +62,13 @@ public class JSONUtils {
         json.put(key, array);
         writeJSON(json, jsonPath);
     }
-    
-    private static JSONObject readJSON(String jsonPath) throws IOException {
+
+    public static JSONObject readJSON(String jsonPath) throws IOException {
         String jsonString = new String(Files.readAllBytes(Paths.get(jsonPath)));
         return new JSONObject(jsonString);
     }
     
-    private static void writeJSON(JSONObject json, String jsonPath) throws IOException {
+    public static void writeJSON(JSONObject json, String jsonPath) throws IOException {
         BufferedWriter writer = new BufferedWriter(new FileWriter(jsonPath));
         writer.write(json.toString());
         writer.close();

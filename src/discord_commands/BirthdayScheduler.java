@@ -19,6 +19,7 @@ import utils.JSONUtils;
 public class BirthdayScheduler extends TimerTask {
 
     private static final Logger LOG = LoggerFactory.getLogger(BirthdayScheduler.class);
+    // TODO: change this back to the general channel
     private final long pingChannelId = 885775210228359189L;
 
     public BirthdayScheduler() {
@@ -49,7 +50,20 @@ public class BirthdayScheduler extends TimerTask {
             {
                 usersToNotify.add((String) id);
             } else {
-                // TODO: remove this id from birthdays.json
+                try {
+                    String birthdate = JSONUtils.get((String) id, AspectiBot.BIRTHDAY_LOG_PATH);
+                    JSONUtils.delete((String) id, AspectiBot.BIRTHDAY_LOG_PATH);
+                    JSONArray array = JSONUtils.getArray(birthdate, AspectiBot.BIRTHDAY_LOG_PATH);
+                    int index = array.toList().indexOf(id);
+                    array.remove(index);
+                    JSONUtils.addArray(month+"-"+day, array, AspectiBot.BIRTHDAY_LOG_PATH);
+                } catch (JSONException e) {
+                    LOG.error("run: json entry not found!");
+                    return;
+                } catch (IOException e) {
+                    LOG.error("run: unable to read json file!", e);
+                    return;
+                }
             }
         });
 

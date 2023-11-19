@@ -1,10 +1,13 @@
 package aspectibot;
 
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import discord_commands.BirthdayCommand;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -13,14 +16,38 @@ import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
+import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.interactions.commands.build.CommandData;
+import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 
 
 public class DiscordServerListener extends ListenerAdapter {
 
     private static final Logger LOG = LoggerFactory.getLogger(DiscordServerListener.class);
+	private HashMap<String, DiscordCommand> commandMap = new HashMap<>();
+	   
+	public void onReady(ReadyEvent event) {
+		//register slash commands
+		ArrayList<CommandData> commands = new ArrayList<>();
+		BirthdayCommand birthdayCommand = new BirthdayCommand();
+		commands.add(birthdayCommand.register());
+		commandMap.put("birthday", birthdayCommand);
+	
+		event.getJDA().updateCommands().addCommands(commands).queue();
+	}
+
+	@Override
+	public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
+		DiscordCommand cmd;
+		if((cmd = commandMap.get(event.getName())) != null) {
+			MessageCreateData data = cmd.reply(event);
+			event.reply(data).setEphemeral(true).queue();
+		}
+	}
     
 	@Override
 	public void onMessageReceived(MessageReceivedEvent event) {

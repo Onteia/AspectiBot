@@ -9,8 +9,9 @@ import org.slf4j.LoggerFactory;
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
 import com.github.twitch4j.common.enums.CommandPermission;
 
+import aspectibot.AspectiBot;
 import aspectibot.TwitchCommand;
-import utils.CommandLog;
+import utils.JSONUtils;
 
 public class LogDeleteCommand implements TwitchCommand {
 
@@ -24,7 +25,7 @@ public class LogDeleteCommand implements TwitchCommand {
 			if(message.length <= 1)
 			    return "";
 			try {	
-				CommandLog.delete(message[1]);
+				JSONUtils.delete(message[1], AspectiBot.COMMAND_LOG_PATH);
 				return "";
 			} catch(IOException e) {
 			    LOG.error("response: Unable to delete " + message[1] + " from the json!");

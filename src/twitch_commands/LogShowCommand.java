@@ -8,8 +8,9 @@ import org.json.JSONException;
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
 import com.github.twitch4j.common.enums.CommandPermission;
 
+import aspectibot.AspectiBot;
 import aspectibot.TwitchCommand;
-import utils.CommandLog;
+import utils.JSONUtils;
 
 public class LogShowCommand implements TwitchCommand {
 
@@ -23,7 +24,7 @@ public class LogShowCommand implements TwitchCommand {
 			
 			String commandName = message[1];
 			try {	
-				return CommandLog.get(commandName);
+				return JSONUtils.get(commandName, AspectiBot.COMMAND_LOG_PATH);
 			} catch (IOException e) {
                 return "";
             } catch (JSONException e) {

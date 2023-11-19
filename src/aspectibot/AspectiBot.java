@@ -86,6 +86,7 @@ public class AspectiBot {
 	private static String LIVE_ICON_PATH;
 	private static String OFFLINE_ICON_PATH;
 	public static String COMMAND_LOG_PATH;
+	public static String BIRTHDAY_LOG_PATH;
 	private static String THIS_FOLDER_PATH;
 	
 	/* Aspecticord settings */
@@ -178,36 +179,7 @@ public class AspectiBot {
 
 		whisper(twitchClient);
 
-		Map<String, TwitchCommand> commands = new HashMap<>();
-
-		commands.put("!emotes", new EmotesCommand());
-		commands.put("!leaderboards", new LeaderboardCommand());
-		commands.put("!lurk", new LurkCommand());
-		commands.put("!twitter", new TwitterCommand());
-		commands.put("!addcom", new LogAddCommand());
-		commands.put("!showcom", new LogShowCommand());
-		commands.put("!delcom", new LogDeleteCommand());
-		commands.put("!editcom", new LogEditCommand());
-		commands.put("!clip", new ClipCommand());
-		commands.put("!twitchemote", new TwitchEmoteCommand());
-
-		// executing commands
-		twitchClient.getEventManager().onEvent(ChannelMessageEvent.class, event -> {
-
-			String cmd = event.getMessage().toLowerCase().split(" ")[0];
-
-			TwitchCommand command;
-			
-			if ((command = commands.get(cmd)) != null) { 
-				// if the input is in the hashmap
-				
-				twitchClient.getChat().sendMessage(
-					ASPECTICOR, command.response(event), 
-					"", event.getMessageEvent().getMessageId().get()); 
-					// post the proper response
-			}
-
-		});
+		registerTwitchCommands();
 
 		// channel point stuff
 		twitchClient.getEventManager().onEvent(RewardRedeemedEvent.class, event -> {
@@ -479,7 +451,7 @@ public class AspectiBot {
         }
     } // end of createVodThumbnail method
 
-public static void whisper(TwitchClient twitchClient) {
+	public static void whisper(TwitchClient twitchClient) {
 		// if a mod in twitch channel whispers bot, send chat to that twitch channel
 		twitchClient.getEventManager().onEvent(PrivateMessageEvent.class, event -> {
 			List<String> mods = Arrays.asList(modArray);
@@ -567,6 +539,7 @@ public static void whisper(TwitchClient twitchClient) {
             LIVE_ICON_PATH = prop.getProperty("LIVE_ICON_PATH");
             OFFLINE_ICON_PATH = prop.getProperty("OFFLINE_ICON_PATH");
             COMMAND_LOG_PATH = prop.getProperty("COMMAND_LOG_PATH");
+			BIRTHDAY_LOG_PATH = prop.getProperty("BIRTHDAY_LOG_PATH");
             THIS_FOLDER_PATH = prop.getProperty("THIS_FOLDER_PATH");
         } catch (FileNotFoundException e) {
             //no config file
@@ -575,7 +548,8 @@ public static void whisper(TwitchClient twitchClient) {
             OPEN_AI_TOKEN_PATH = "/home/orangepi/jars/persistent/openAiToken.txt";
             LIVE_ICON_PATH = "/home/orangepi/jars/persistent/Aspecticor_Live.png";
             OFFLINE_ICON_PATH = "/home/orangepi/jars/persistent/Aspecticor_Offline.png";
-            COMMAND_LOG_PATH = "/home/orangepi/jars/AspectiBot/src/commands/commands.json";
+            COMMAND_LOG_PATH = "/home/orangepi/jars/AspectiBot/src/twitch_commands/commands.json";
+			BIRTHDAY_LOG_PATH = "/home/orangepi/jars/AspectiBot/src/discord_commands/birthdays.json";
             THIS_FOLDER_PATH = "/home/orangepi/jars/AspectiBot/";
         } catch (IOException e1) {
             LOG.error("loadConfig: IOException on loading config file!");
@@ -607,6 +581,39 @@ public static void whisper(TwitchClient twitchClient) {
 			LOG.error("loadCredentials: Authentication Failed!");
 		}
 		
+	}
+
+	public static void registerTwitchCommands() {
+		Map<String, TwitchCommand> commands = new HashMap<>();
+
+		commands.put("!emotes", new EmotesCommand());
+		commands.put("!leaderboards", new LeaderboardCommand());
+		commands.put("!lurk", new LurkCommand());
+		commands.put("!twitter", new TwitterCommand());
+		commands.put("!addcom", new LogAddCommand());
+		commands.put("!showcom", new LogShowCommand());
+		commands.put("!delcom", new LogDeleteCommand());
+		commands.put("!editcom", new LogEditCommand());
+		commands.put("!clip", new ClipCommand());
+		commands.put("!twitchemote", new TwitchEmoteCommand());
+
+		// executing commands
+		twitchClient.getEventManager().onEvent(ChannelMessageEvent.class, event -> {
+
+			String cmd = event.getMessage().toLowerCase().split(" ")[0];
+
+			TwitchCommand command;
+			
+			if ((command = commands.get(cmd)) != null) { 
+				
+				twitchClient.getChat().sendMessage(
+					ASPECTICOR, command.response(event), 
+					"", event.getMessageEvent().getMessageId().get()
+				); 
+			}
+
+		});
+
 	}
 
 }

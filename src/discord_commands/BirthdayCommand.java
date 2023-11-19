@@ -25,7 +25,7 @@ public class BirthdayCommand implements DiscordCommand {
     private static final Logger LOG = LoggerFactory.getLogger(BirthdayCommand.class);
     protected static final String TIME_ZONE = "Canada/Mountain";
     private final int HOUR = 2;
-    private final int MINUTE = 26;
+    private final int MINUTE = 33;
     private final int SECOND = 0;
 
     public BirthdayCommand() {

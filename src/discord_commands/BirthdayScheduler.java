@@ -42,19 +42,19 @@ public class BirthdayScheduler extends TimerTask {
             return;
         }
 
-        ArrayList<Long> usersToNotify = new ArrayList<Long>();
+        ArrayList<String> usersToNotify = new ArrayList<String>();
         possibleUsers.forEach(id -> {
             if(AspectiBot.jda.getGuildById(AspectiBot.SERVER_ID)
-                .isMember(UserSnowflake.fromId((long) id)))
+                .isMember(UserSnowflake.fromId((String) id)))
             {
-                usersToNotify.add((long) id);
+                usersToNotify.add((String) id);
             } else {
                 // TODO: remove this id from birthdays.json
             }
         });
 
         String birthdayText = "";
-        for(long userID : usersToNotify) {
+        for(String userID : usersToNotify) {
             birthdayText += "<@" + userID + "> ";
         }
         birthdayText += "happy birthday!! everyone come wish them a happy birthday!!";

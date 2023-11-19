@@ -1,6 +1,10 @@
 package discord_commands;
 
 import java.io.IOException;
+import java.util.Date;
+import java.util.Calendar;
+import java.util.TimeZone;
+import java.util.Timer;
 
 import javax.management.openmbean.KeyAlreadyExistsException;
 
@@ -21,6 +25,19 @@ import utils.JSONUtils;
 public class BirthdayCommand implements DiscordCommand {
 
     private static final Logger LOG = LoggerFactory.getLogger(BirthdayCommand.class);
+    private final String TIME_ZONE = "Canada/Mountain";
+
+    public BirthdayCommand() {
+        LOG.info("Birthday command initialized!");
+        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone(TIME_ZONE));
+        calendar.set(Calendar.HOUR_OF_DAY, 12);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        Date pingTime = calendar.getTime();
+        LOG.info("pinging at: " + pingTime.toString());
+        Timer timer = new Timer();
+        timer.schedule(new BirthdayScheduler(), pingTime);
+    }
 
     @Override
     public CommandData register() {
@@ -62,7 +79,10 @@ public class BirthdayCommand implements DiscordCommand {
         }
         
         try {
-            JSONUtils.add(userID, month+","+day, AspectiBot.BIRTHDAY_LOG_PATH);
+            // better to have month&day as the key to easily search through all users that 
+            // have a birthday then
+            // issue: have to somehow make the value an array to append to it instead of overwriting
+            JSONUtils.add(day+"-"+month, userID, AspectiBot.BIRTHDAY_LOG_PATH);
         } catch(KeyAlreadyExistsException e) {
             try {
                 JSONUtils.edit(userID, month+","+day, AspectiBot.BIRTHDAY_LOG_PATH);

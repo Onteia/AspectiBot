@@ -20,8 +20,8 @@ public class BirthdayScheduler extends TimerTask {
 
     private static final Logger LOG = LoggerFactory.getLogger(BirthdayScheduler.class);
     public static final String TIME_ZONE = "Canada/Mountain";
-    public static final int HOUR = 15;
-    public static final int MINUTE = 30;
+    public static final int HOUR = 12;
+    public static final int MINUTE = 0;
     public static final int SECOND = 0;
     // TODO: change this back to the general channel
     private final long pingChannelId = 885775210228359189L;
@@ -33,14 +33,6 @@ public class BirthdayScheduler extends TimerTask {
     public void run() {
         LocalDateTime today = LocalDateTime.now(ZoneId.of(TIME_ZONE));
         //return if running after the required time; maybe use Calendar or localdate.ofinstant
-        LocalDateTime pingTime = LocalDateTime.now(ZoneId.of(TIME_ZONE))
-            .withHour(HOUR).withMinute(MINUTE).withSecond(SECOND);
-        if(today.isAfter(pingTime)) {
-            LOG.info("It is after the ping time!");
-            return;
-        } else {
-            LOG.info("it is before the ping time!");
-        }
         String month = ""+today.getMonthValue();
         String day = ""+today.getDayOfMonth();
 
@@ -49,10 +41,16 @@ public class BirthdayScheduler extends TimerTask {
             JSONArray arr = JSONUtils.getArray(month+"-"+day, AspectiBot.BIRTHDAY_LOG_PATH);
             possibleUsers = arr.toList();
         } catch (JSONException e) {
-            LOG.error("run: key is not in the birthday json!");
+            LOG.error("run: key is not in the birthday json!", e);
             return;
         } catch (IOException e) {
-            LOG.error("run: unable to read birthday json!");
+            LOG.error("run: unable to read birthday json!", e);
+            return;
+        }
+        LocalDateTime pingTime = LocalDateTime.now(ZoneId.of(TIME_ZONE))
+            .withHour(HOUR).withMinute(MINUTE).withSecond(SECOND);
+        if(today.isAfter(pingTime)) {
+            LOG.info("It is after the ping time!");
             return;
         }
 

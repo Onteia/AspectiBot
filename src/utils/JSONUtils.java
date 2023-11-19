@@ -8,6 +8,7 @@ import java.nio.file.Paths;
 
 import javax.management.openmbean.KeyAlreadyExistsException;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -37,6 +38,14 @@ public class JSONUtils {
     public static void edit(String key, String value, String jsonPath) throws IOException {
         delete(key, jsonPath);
         add(key, value, jsonPath);
+    }
+
+    public static void append(String key, String value, String jsonPath) throws IOException {
+        JSONObject json = readJSON(jsonPath);
+        JSONArray array = (json.has(key)) ? json.getJSONArray(key) : new JSONArray();
+        array.put(value);
+        json.put(key, array);
+        writeJSON(json, jsonPath);
     }
     
     private static JSONObject readJSON(String jsonPath) throws IOException {

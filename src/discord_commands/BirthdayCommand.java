@@ -6,8 +6,6 @@ import java.util.Calendar;
 import java.util.TimeZone;
 import java.util.Timer;
 
-import javax.management.openmbean.KeyAlreadyExistsException;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,21 +23,20 @@ import utils.JSONUtils;
 public class BirthdayCommand implements DiscordCommand {
 
     private static final Logger LOG = LoggerFactory.getLogger(BirthdayCommand.class);
-    private final String TIME_ZONE = "Canada/Mountain";
-    private final int HOUR = 1;
-    private final int MINUTE = 6;
+    protected static final String TIME_ZONE = "Canada/Mountain";
+    private final int HOUR = 12;
+    private final int MINUTE = 0;
     private final int SECOND = 0;
 
     public BirthdayCommand() {
-        LOG.info("Birthday command initialized!");
         Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone(TIME_ZONE));
         calendar.set(Calendar.HOUR_OF_DAY, HOUR);
         calendar.set(Calendar.MINUTE, MINUTE);
         calendar.set(Calendar.SECOND, SECOND);
         Date pingTime = calendar.getTime();
-        LOG.info("pinging at: " + pingTime.toString());
         Timer timer = new Timer();
         timer.schedule(new BirthdayScheduler(), pingTime);
+        LOG.info("pinging at: " + pingTime.toString());
     }
 
     @Override
@@ -47,18 +44,18 @@ public class BirthdayCommand implements DiscordCommand {
         CommandData command = Commands.slash("birthday", "add your birthday to be pinged by AspectiBot!")
             .addOptions(
                 new OptionData(OptionType.STRING, "month", "the month you were born in")
-                    .addChoice("January", "january")
-                    .addChoice("February", "february")
-                    .addChoice("March", "march")
-                    .addChoice("April", "april")
-                    .addChoice("May", "may")
-                    .addChoice("June", "june")
-                    .addChoice("July", "july")
-                    .addChoice("August", "august")
-                    .addChoice("September", "september")
-                    .addChoice("October", "october")
-                    .addChoice("November", "november")
-                    .addChoice("December", "december")
+                    .addChoice("January", "1")
+                    .addChoice("February", "2")
+                    .addChoice("March", "3")
+                    .addChoice("April", "4")
+                    .addChoice("May", "5")
+                    .addChoice("June", "6")
+                    .addChoice("July", "7")
+                    .addChoice("August", "8")
+                    .addChoice("September", "9")
+                    .addChoice("October", "10")
+                    .addChoice("November", "11")
+                    .addChoice("December", "12")
                     .setRequired(true),
                 new OptionData(OptionType.INTEGER, "day", "the day you were born on")
                     .setRequiredRange(1, 31)                  
@@ -70,11 +67,11 @@ public class BirthdayCommand implements DiscordCommand {
     @Override
     public MessageCreateData reply(SlashCommandInteractionEvent event) {
         String month;
-        int day;
+        String day;
         String userID;
         try {
             month = event.getOption("month").getAsString();
-            day = event.getOption("day").getAsInt();
+            day = event.getOption("day").getAsString();
             userID = event.getUser().getId();
         } catch(IllegalArgumentException e) {
             LOG.error("reply: unable to get command option!", e);
@@ -85,13 +82,7 @@ public class BirthdayCommand implements DiscordCommand {
             // better to have month&day as the key to easily search through all users that 
             // have a birthday then
             // issue: have to somehow make the value an array to append to it instead of overwriting
-            JSONUtils.add(day+"-"+month, userID, AspectiBot.BIRTHDAY_LOG_PATH);
-        } catch(KeyAlreadyExistsException e) {
-            try {
-                JSONUtils.edit(userID, month+","+day, AspectiBot.BIRTHDAY_LOG_PATH);
-            } catch(IOException e2) {
-                LOG.error("reply: unable to edit birthday in json file!", e2);
-            }
+            JSONUtils.append(month+"-"+day, userID, AspectiBot.BIRTHDAY_LOG_PATH);
         } catch(IOException e) {
             LOG.error("reply: unable to add birthday to json file!", e);
             return error();

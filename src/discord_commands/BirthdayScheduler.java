@@ -14,9 +14,6 @@ public class BirthdayScheduler extends TimerTask {
 
     private static final Logger LOG = LoggerFactory.getLogger(BirthdayScheduler.class);
     private final long pingChannelId = 885775210228359189L;
-    // use aspect's timezone
-    private final ZoneId TIME_ZONE = ZoneId.of("America/Denver");
-    private LocalDate today;
     private ArrayList<String> usersToNotify;
 
     public BirthdayScheduler() {
@@ -24,9 +21,16 @@ public class BirthdayScheduler extends TimerTask {
     }
 
     public void run() {
+        // get current month and day
+        LocalDate today = LocalDate.now(ZoneId.of(BirthdayCommand.TIME_ZONE));
+        //today.getMonthValue();
         // get all users whose birthday it is
 
         // if the object doesn't exist in the json file, return
+
+        // check if the user ids are still in the discord server
+
+        // if not, remove them from the json file
 
         // have different messages for number of people
 

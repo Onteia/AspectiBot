@@ -1,7 +1,7 @@
 package discord_commands;
 
 import java.io.IOException;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +19,10 @@ import utils.JSONUtils;
 public class BirthdayScheduler extends TimerTask {
 
     private static final Logger LOG = LoggerFactory.getLogger(BirthdayScheduler.class);
+    public static final String TIME_ZONE = "Canada/Mountain";
+    public static final int HOUR = 12;
+    public static final int MINUTE = 0;
+    public static final int SECOND = 0;
     // TODO: change this back to the general channel
     private final long pingChannelId = 885775210228359189L;
 
@@ -27,7 +31,16 @@ public class BirthdayScheduler extends TimerTask {
     }
 
     public void run() {
-        LocalDate today = LocalDate.now(ZoneId.of(BirthdayCommand.TIME_ZONE));
+        LocalDateTime today = LocalDateTime.now(ZoneId.of(TIME_ZONE));
+        //return if running after the required time; maybe use Calendar or localdate.ofinstant
+        LocalDateTime pingTime = LocalDateTime.now(ZoneId.of(TIME_ZONE))
+            .withHour(HOUR).withMinute(MINUTE).withSecond(SECOND);
+        if(today.isAfter(pingTime)) {
+            LOG.info("It is after the ping time!");
+            return;
+        } else {
+            LOG.info("it is before the ping time!");
+        }
         String month = ""+today.getMonthValue();
         String day = ""+today.getDayOfMonth();
 

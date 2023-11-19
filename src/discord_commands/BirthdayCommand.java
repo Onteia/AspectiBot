@@ -26,16 +26,12 @@ import utils.JSONUtils;
 public class BirthdayCommand implements DiscordCommand {
 
     private static final Logger LOG = LoggerFactory.getLogger(BirthdayCommand.class);
-    protected static final String TIME_ZONE = "Canada/Mountain";
-    private final int HOUR = 12;
-    private final int MINUTE = 0;
-    private final int SECOND = 0;
 
     public BirthdayCommand() {
-        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone(TIME_ZONE));
-        calendar.set(Calendar.HOUR_OF_DAY, HOUR);
-        calendar.set(Calendar.MINUTE, MINUTE);
-        calendar.set(Calendar.SECOND, SECOND);
+        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone(BirthdayScheduler.TIME_ZONE));
+        calendar.set(Calendar.HOUR_OF_DAY, BirthdayScheduler.HOUR);
+        calendar.set(Calendar.MINUTE, BirthdayScheduler.MINUTE);
+        calendar.set(Calendar.SECOND, BirthdayScheduler.SECOND);
         Date pingTime = calendar.getTime();
         Timer timer = new Timer();
         timer.schedule(new BirthdayScheduler(), pingTime);

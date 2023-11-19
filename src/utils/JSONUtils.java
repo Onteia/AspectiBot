@@ -15,8 +15,11 @@ import org.json.JSONObject;
 public class JSONUtils {
 
     public static String get(String key, String jsonPath) throws JSONException, IOException {
-        String response = readJSON(jsonPath).getString(key);
-        return response;
+        return readJSON(jsonPath).getString(key);
+    }
+    
+    public static JSONArray getArray(String key, String jsonPath) throws JSONException, IOException {
+        return readJSON(jsonPath).getJSONArray(key);
     }
     
     public static void add(String key, String value, String jsonPath) throws IOException, KeyAlreadyExistsException {    

@@ -67,27 +67,7 @@ public class BirthdayCommand implements DiscordCommand {
                             .setRequired(true)
                     ),
                 new SubcommandData("remove", "remove yourself from being pinged on your birthday")
-            )
-            .addOptions(
-                new OptionData(OptionType.STRING, "month", "the month you were born in")
-                    .addChoice("January", "1")
-                    .addChoice("February", "2")
-                    .addChoice("March", "3")
-                    .addChoice("April", "4")
-                    .addChoice("May", "5")
-                    .addChoice("June", "6")
-                    .addChoice("July", "7")
-                    .addChoice("August", "8")
-                    .addChoice("September", "9")
-                    .addChoice("October", "10")
-                    .addChoice("November", "11")
-                    .addChoice("December", "12")
-                    .setRequired(true),
-                new OptionData(OptionType.INTEGER, "day", "the day you were born on")
-                    .setRequiredRange(1, 31)                  
-                    .setRequired(true)
             );
-        // TODO: add command/subcommand to reset birthday
         return command; 
     }
 

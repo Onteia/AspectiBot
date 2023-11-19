@@ -23,16 +23,16 @@ public class BirthdayScheduler extends TimerTask {
     public static final int HOUR = 12;
     public static final int MINUTE = 0;
     public static final int SECOND = 0;
-    // TODO: change this back to the general channel
-    private final long pingChannelId = 885775210228359189L;
-
-    public BirthdayScheduler() {
-        LOG.info("BirthdayScheduler initialized!");
-    }
+    private final long pingChannelId = 1045259988416876587L;
 
     public void run() {
         LocalDateTime today = LocalDateTime.now(ZoneId.of(TIME_ZONE));
-        //return if running after the required time; maybe use Calendar or localdate.ofinstant
+        LocalDateTime pingTime = LocalDateTime.now(ZoneId.of(TIME_ZONE))
+            .withHour(HOUR).withMinute(MINUTE).withSecond(SECOND);
+        if(today.isAfter(pingTime)) {
+            return;
+        }
+
         String month = ""+today.getMonthValue();
         String day = ""+today.getDayOfMonth();
 
@@ -41,16 +41,10 @@ public class BirthdayScheduler extends TimerTask {
             JSONArray arr = JSONUtils.getArray(month+"-"+day, AspectiBot.BIRTHDAY_LOG_PATH);
             possibleUsers = arr.toList();
         } catch (JSONException e) {
-            LOG.error("run: key is not in the birthday json!", e);
+            // no birthdays associated with today in json file
             return;
         } catch (IOException e) {
             LOG.error("run: unable to read birthday json!", e);
-            return;
-        }
-        LocalDateTime pingTime = LocalDateTime.now(ZoneId.of(TIME_ZONE))
-            .withHour(HOUR).withMinute(MINUTE).withSecond(SECOND);
-        if(today.isAfter(pingTime)) {
-            LOG.info("It is after the ping time!");
             return;
         }
 

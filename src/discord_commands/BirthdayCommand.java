@@ -35,7 +35,6 @@ public class BirthdayCommand implements DiscordCommand {
         Date pingTime = calendar.getTime();
         Timer timer = new Timer();
         timer.schedule(new BirthdayScheduler(), pingTime);
-        LOG.info("pinging at: " + pingTime.toString());
     }
 
     @Override

@@ -33,8 +33,9 @@ public class DiscordServerListener extends ListenerAdapter {
 	public void onReady(ReadyEvent event) {
 		//register slash commands
 		ArrayList<CommandData> commands = new ArrayList<>();
-		commands.add(new BirthdayCommand().register());
-		commandMap.put("birthday", new BirthdayCommand());
+		BirthdayCommand birthdayCommand = new BirthdayCommand();
+		commands.add(birthdayCommand.register());
+		commandMap.put("birthday", birthdayCommand);
 	
 		event.getJDA().updateCommands().addCommands(commands).queue();
 	}

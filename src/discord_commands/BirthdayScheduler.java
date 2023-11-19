@@ -26,6 +26,10 @@ public class BirthdayScheduler extends TimerTask {
     public void run() {
         // get all users whose birthday it is
 
+        // if the object doesn't exist in the json file, return
+
+        // have different messages for number of people
+
         // wish them a happy birthday
         AspectiBot.jda.getGuildById(AspectiBot.SERVER_ID)
             .getTextChannelById(pingChannelId)

@@ -60,6 +60,8 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Icon;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.channel.concrete.NewsChannel;
+import net.dv8tion.jda.api.interactions.components.ActionRow;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.FileUpload;
@@ -281,8 +283,14 @@ public class AspectiBot {
 				
 				EmbedBuilder goLiveEmbed = formatEmbed(event.getStream());
                 Message streamNotificationMessage = newsChannel.sendMessage("<@&"+ PING_ROLE +"> HE'S LIVE!!!")
-                        .addEmbeds(goLiveEmbed.build())
-                        .complete();
+					.addEmbeds(goLiveEmbed.build())
+					.addActionRow(
+						Button.link(
+							"https://www.twitch.tv/aspecticor",
+							"Watch Stream"
+						)
+					)
+					.complete();
 
                 notificationMessageId = streamNotificationMessage.getId();
                 File idFile = new File(AspectiBot.THIS_FOLDER_PATH + "notifID.sav");
@@ -344,6 +352,21 @@ public class AspectiBot {
 			
 			createVodThumbnail(latestVod);
 			
+			NewsChannel ch = jda.getNewsChannelById(LIVE_CHANNEL_ID);
+			if(ch == null) {
+				LOG.error("goOffline: Could not find the go-live channel! Check the channel ID!");
+			} else {
+				ch.editMessageComponentsById(
+					notificationMessageId, 
+				 	ActionRow.of(
+						Button.link(
+							latestVod.getUrl(), 
+							"Watch VOD"
+						)
+					)
+				);
+			}
+
 			// delete messageId value from the save file
 			// and set id to ""
 			File notifIdFile = new File(AspectiBot.THIS_FOLDER_PATH + "notifID.sav");
@@ -433,7 +456,7 @@ public class AspectiBot {
             NewsChannel newsChannel = jda.getNewsChannelById(AspectiBot.LIVE_CHANNEL_ID);
 
             if (newsChannel == null) {
-                LOG.error("goOffline: Could not find the go-live channel! Check the channel ID!");
+                LOG.error("createVodThumbnail: Could not find the go-live channel! Check the channel ID!");
             } else {
                 newsChannel.editMessageEmbedsById(
                         notificationMessageId, 

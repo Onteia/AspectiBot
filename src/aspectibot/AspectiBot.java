@@ -364,7 +364,7 @@ public class AspectiBot {
 							"Watch VOD"
 						)
 					)
-				);
+				).queue();
 			}
 
 			// delete messageId value from the save file

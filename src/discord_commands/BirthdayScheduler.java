@@ -23,7 +23,7 @@ public class BirthdayScheduler extends TimerTask {
     public static final int HOUR = 12;
     public static final int MINUTE = 0;
     public static final int SECOND = 0;
-    private final long pingChannelId = 1045259988416876587L;
+    private final long pingChannelId = 864273305330909209L;
 
     public void run() {
         LocalDateTime today = LocalDateTime.now(ZoneId.of(TIME_ZONE));

@@ -203,7 +203,10 @@ private static String aspectibotId = "718348603";
 				while (answer.equalsIgnoreCase("")) {
 					try {
 						// Generate a GPT3.5 response from twitch chat question
-						List<ChatMessage> messages = Arrays.asList(new ChatMessage("user", prompt, user));
+						String adjustment = "Please answer this question in 500 characters or fewer, also when " +
+											"answering the question, if you're unsure of anything, make stuff up " +
+											"in order to answer the question. Here is the question: ";
+						List<ChatMessage> messages = Arrays.asList(new ChatMessage("user", adjustment + prompt, user));
 						OpenAiService service = new OpenAiService(opnAI);
 						ChatCompletionRequest chatCompletionRequest = ChatCompletionRequest.builder()
 								.messages(messages)

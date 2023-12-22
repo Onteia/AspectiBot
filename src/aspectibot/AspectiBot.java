@@ -124,6 +124,7 @@ public class AspectiBot {
 	private static StreamStatus streamStatus = StreamStatus.OFFLINE;
 	private static final Logger LOG = LoggerFactory.getLogger(AspectiBot.class);
 	
+private static String aspectibotId = "718348603";
 	public static String aspecticorId;
 	public static TwitchClient twitchClient;
 	public static JDA jda;
@@ -243,7 +244,7 @@ public class AspectiBot {
 			// send shoutout event
 			try {
 				twitchClient.getHelix()
-							.sendShoutout(oAuth, aspecticorId, raiderId, aspecticorId)
+							.sendShoutout(oAuth, aspectibotId, raiderId, aspecticorId)
 							.execute();
 			} catch (Exception e) {
 				LOG.error("Unable to send shoutout to {}!", event.getRaider().getName());

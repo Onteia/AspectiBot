@@ -119,6 +119,7 @@ public class BirthdayCommand implements DiscordCommand {
 
         MessageCreateBuilder message = new MessageCreateBuilder()
             .setContent("added your birthday!");
+        LOG.info("added " + event.getUser().getEffectiveName() + " [" + event.getUser().getId() + "]'s birthday!");
         return message;
     }
 

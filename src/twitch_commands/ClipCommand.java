@@ -32,7 +32,7 @@ public class ClipCommand implements TwitchCommand {
 											.execute();
 		
 		String clipId = clipData.getData().get(0).getId();
-		String clipURL = "https://clips.twitch.tv/" + clipId;
+		String clipURL = "https://clips.fxtwitch.tv/" + clipId;
 		
 		// send a message in the discord of the clip
 		TextChannel clipChannel = AspectiBot.jda.getTextChannelById(AspectiBot.CLIP_CHANNEL_ID);

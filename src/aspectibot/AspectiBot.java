@@ -247,7 +247,7 @@ private static String aspectibotId = "718348603";
 			// send shoutout event
 			try {
 				twitchClient.getHelix()
-							.sendShoutout(oAuth, aspectibotId, raiderId, aspecticorId)
+							.sendShoutout(oAuth, aspecticorId, raiderId, aspectibotId)
 							.execute();
 			} catch (Exception e) {
 				LOG.error("Unable to send shoutout to {}!", event.getRaider().getName());

@@ -124,6 +124,7 @@ public class AspectiBot {
 	private static StreamStatus streamStatus = StreamStatus.OFFLINE;
 	private static final Logger LOG = LoggerFactory.getLogger(AspectiBot.class);
 	
+private static String aspectibotId = "718348603";
 	public static String aspecticorId;
 	public static TwitchClient twitchClient;
 	public static JDA jda;
@@ -202,7 +203,10 @@ public class AspectiBot {
 				while (answer.equalsIgnoreCase("")) {
 					try {
 						// Generate a GPT3.5 response from twitch chat question
-						List<ChatMessage> messages = Arrays.asList(new ChatMessage("user", prompt, user));
+						String adjustment = "Please answer this question in 450 characters or fewer, also when " +
+											"answering the question, if you're unsure of anything, make stuff up " +
+											"in order to answer the question. Here is the question: ";
+						List<ChatMessage> messages = Arrays.asList(new ChatMessage("user", adjustment + prompt, user));
 						OpenAiService service = new OpenAiService(opnAI);
 						ChatCompletionRequest chatCompletionRequest = ChatCompletionRequest.builder()
 								.messages(messages)
@@ -243,7 +247,7 @@ public class AspectiBot {
 			// send shoutout event
 			try {
 				twitchClient.getHelix()
-							.sendShoutout(oAuth, aspecticorId, raiderId, aspecticorId)
+							.sendShoutout(oAuth, aspecticorId, raiderId, aspectibotId)
 							.execute();
 			} catch (Exception e) {
 				LOG.error("Unable to send shoutout to {}!", event.getRaider().getName());

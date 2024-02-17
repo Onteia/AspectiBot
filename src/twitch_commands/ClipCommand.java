@@ -2,7 +2,7 @@ package twitch_commands;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
+import java.util.concurrent.TimeUnit;
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
 import com.github.twitch4j.helix.domain.CreateClipList;
 
@@ -46,7 +46,7 @@ public class ClipCommand implements TwitchCommand {
 		        clipMessage = "***" + clipName + "*** clipped by " + event.getUser().getName() + "\n" + clipURL; 
 		    }
 		    
-		    clipChannel.sendMessage(clipMessage).submit();
+		    clipChannel.sendMessage(clipMessage).queueAfter(5, TimeUnit.SECONDS);
 		} else {
 		    LOG.error("response: Clip Channel ID not configured or invalid!");
 		}

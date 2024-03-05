@@ -1,5 +1,6 @@
 package discord_commands;
 
+import java.lang.StackWalker.Option;
 import java.util.concurrent.ExecutionException;
 
 import org.slf4j.Logger;
@@ -14,6 +15,7 @@ import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.components.LayoutComponent;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
@@ -26,8 +28,10 @@ public class YTVodCommand implements DiscordCommand {
     @Override
     public CommandData register() {
         CommandData command = Commands.slash("addytvod", "add youtube vod button to message")
-            .addOption(OptionType.INTEGER, "message-id", "message id of the message to attach the link to", true)
-            .addOption(OptionType.STRING, "url", "youtube link of the vod", true)
+            .addOptions(
+                new OptionData(OptionType.INTEGER, "message-id", "id of the message to attach the link to", true),
+                new OptionData(OptionType.STRING, "url", "youtube link of the vod", true)
+            )
             .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.MANAGE_CHANNEL));
         return command;
     }

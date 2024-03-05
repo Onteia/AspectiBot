@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import discord_commands.BirthdayCommand;
+import discord_commands.YTVodCommand;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -34,9 +35,12 @@ public class DiscordServerListener extends ListenerAdapter {
 		//register slash commands
 		ArrayList<CommandData> commands = new ArrayList<>();
 		BirthdayCommand birthdayCommand = new BirthdayCommand();
+		YTVodCommand ytvodCommand = new YTVodCommand();
 		commands.add(birthdayCommand.register());
+		commands.add(ytvodCommand.register());
 		commandMap.put("birthday", birthdayCommand);
-	
+		commandMap.put("addytvod", ytvodCommand);
+
 		event.getJDA().updateCommands().addCommands(commands).queue();
 	}
 

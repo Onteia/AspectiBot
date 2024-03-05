@@ -93,7 +93,7 @@ public class AspectiBot {
 	
 	/* Aspecticord settings */
 	public static final long SERVER_ID = 864273305330909204L; // Aspecticord Server ID
-	private static final long LIVE_CHANNEL_ID = 885705830341697536L; // #aspecticor-is-live channel
+	public static final long LIVE_CHANNEL_ID = 885705830341697536L; // #aspecticor-is-live channel
 	public static final long LOG_CHANNEL_ID = 1016876667509166100L; // #server_logs channel
 	public static final long CLIP_CHANNEL_ID = 867258015220236319L;	// #clips channel
 	public static final long DEFAULT_ROLE = 885698882695229500L; // Aspecticord default role
